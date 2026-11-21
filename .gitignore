@@ -1,0 +1,120 @@
+# ---------------------------------------------------------------
+# Dependencies
+# ---------------------------------------------------------------
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# ---------------------------------------------------------------
+# Build output and caches
+# ---------------------------------------------------------------
+dist/
+build/
+out/
+.cache/
+*.tsbuildinfo
+.eslintcache
+.prettiercache
+vite.config.*.timestamp-*
+vitest.config.*.timestamp-*
+
+# Pyodide files copied from node_modules into the runner site at build time
+apps/runner/public/pyodide/
+
+# ---------------------------------------------------------------
+# Cloudflare (Wrangler, local D1, secrets)
+# ---------------------------------------------------------------
+.wrangler/
+.mf/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# ---------------------------------------------------------------
+# Environment files and secrets
+# ---------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.p12
+secrets/
+
+# ---------------------------------------------------------------
+# Databases, exports and backups (may contain student data, G17)
+# ---------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+backups/
+backup-*.sql
+
+# Generated demo seed (rebuilt by pnpm db:reset with the current time)
+apps/api/seed/demo.sql
+
+# ---------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.auth/
+
+# ---------------------------------------------------------------
+# AI agent instructions (local only, see docs/conventions.md §10)
+# ---------------------------------------------------------------
+AGENTS.md
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+GEMINI.md
+.gemini/
+.codex/
+.cursor/
+.cursorrules
+.windsurfrules
+.aider*
+.github/copilot-instructions.md
+
+# ---------------------------------------------------------------
+# Logs
+# ---------------------------------------------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---------------------------------------------------------------
+# Editors (shared VS Code settings stay in the repo)
+# ---------------------------------------------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# ---------------------------------------------------------------
+# Operating systems
+# ---------------------------------------------------------------
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+# macOS
+.DS_Store
+._*
+# Linux
+.directory
+.Trash-*

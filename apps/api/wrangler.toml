@@ -1,0 +1,21 @@
+name = "codemark"
+main = "src/app.ts"
+compatibility_date = "2026-11-01"
+
+# database_id is set with the deployment (M1 task 9); local runs don't need it.
+[[d1_databases]]
+binding = "DB"
+database_name = "codemark-db"
+migrations_dir = "drizzle"
+
+# Local values (architecture.md section 5). Tests set APP_ENV to "test" in vitest.config.ts.
+[vars]
+APP_ENV = "local"
+APP_ORIGIN = "http://localhost:5173"
+DEMO_MODE = "true"
+
+# The cron (internal-interfaces.md section 4). Locally it runs only through pnpm cron.
+[triggers]
+crons = ["* * * * *"]
+
+# The other variables and static assets arrive with later M1 tasks.

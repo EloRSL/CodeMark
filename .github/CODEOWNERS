@@ -1,0 +1,45 @@
+# Who reviews what. See docs/conventions.md section 4 and docs/data-model.md.
+# GitHub uses the LAST matching line, so general lines come first.
+
+# Everything not listed below: Rok (lead)
+*                                         @EloRSL
+
+# Exams, lifecycle, grades (butarca)
+/apps/api/src/modules/exams/              @butarca
+/apps/web/src/modules/exams/              @butarca
+/packages/core/src/lifecycle.ts           @butarca
+/packages/core/src/grade.ts               @butarca
+/packages/core/src/studentView.ts         @butarca
+
+# Student exam page and editor (timursic2)
+/apps/web/src/modules/student/            @timursic2
+/apps/web/src/lib/runner/                 @timursic2
+/apps/web/src/lib/editor/                 @timursic2
+/packages/core/src/compare.ts             @timursic2
+
+# Submissions and hidden-test check (tzuntar)
+/apps/api/src/modules/submissions/        @tzuntar
+/apps/web/src/modules/submissions/        @tzuntar
+/packages/core/src/hash.ts                @tzuntar
+
+# AI grading (lukaazman)
+/apps/api/src/modules/grading/            @lukaazman
+/apps/web/src/modules/grading/            @lukaazman
+/packages/core/src/grading.ts             @lukaazman
+/docs/ai-quality.md                       @lukaazman
+
+# Review and results (bjaksic84)
+/apps/api/src/modules/review/             @bjaksic84
+/apps/web/src/modules/review/             @bjaksic84
+
+# Security-sensitive code: the security lead (tzuntar) reviews too
+/apps/runner/                             @timursic2 @tzuntar
+/packages/core/src/compare.cases.json     @timursic2 @tzuntar
+/apps/api/src/modules/accounts/           @EloRSL @tzuntar
+/apps/api/src/http/                       @EloRSL @tzuntar
+
+# Contracts, docs and CI: only Rok
+/packages/contracts/                      @EloRSL
+/docs/                                    @EloRSL
+/docs/ai-quality.md                       @lukaazman
+/.github/                                 @EloRSL

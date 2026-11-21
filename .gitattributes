@@ -1,0 +1,49 @@
+# ---------------------------------------------------------------
+# Line endings: LF in the repo and in every checkout, on every OS
+# ---------------------------------------------------------------
+* text=auto eol=lf
+
+# Windows scripts need CRLF to run
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# Test fixtures that must keep their exact bytes (e.g. CRLF output)
+**/fixtures/raw/** -text
+
+# ---------------------------------------------------------------
+# Binary files: never convert, never diff as text
+# ---------------------------------------------------------------
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.pdf    binary
+*.zip    binary
+*.gz     binary
+*.tar    binary
+*.whl    binary
+*.wasm   binary
+*.woff   binary
+*.woff2  binary
+*.ttf    binary
+*.otf    binary
+*.sqlite binary
+*.db     binary
+
+# ---------------------------------------------------------------
+# Better diffs
+# ---------------------------------------------------------------
+*.md    diff=markdown
+*.css   diff=css
+*.html  diff=html
+
+# ---------------------------------------------------------------
+# GitHub: collapse generated files in pull requests, keep docs out
+# of the language stats
+# ---------------------------------------------------------------
+pnpm-lock.yaml                     linguist-generated=true
+apps/api/drizzle/**                linguist-generated=true
+worker-configuration.d.ts          linguist-generated=true
+docs/**                            linguist-documentation=true

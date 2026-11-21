@@ -1,0 +1,7 @@
+# Prettier also skips everything in .gitignore.
+docs/
+# Not formatted yet; rewritten in M4 task 17
+README.md
+pnpm-lock.yaml
+apps/api/drizzle/
+**/worker-configuration.d.ts

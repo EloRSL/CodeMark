@@ -1,0 +1,46 @@
+{
+  "common": {
+    "appName": "CodeMark",
+    "demoBanner": "Demo način: vsi uporabniki in podatki so izmišljeni.",
+    "language": "Jezik",
+    "locales": {
+      "sl": "Slovenščina",
+      "en": "English"
+    },
+    "loading": "Nalaganje …",
+    "networkError": "Strežnik se ne odziva. Preverite povezavo in poskusite znova.",
+    "signOut": "Odjava"
+  },
+  "accounts": {
+    "signIn": {
+      "title": "Prijava",
+      "demoHeading": "Demo računi",
+      "demoAs": "Prijava kot {{name}}"
+    },
+    "home": {
+      "signedInAs": "Prijavljeni ste kot {{name}} ({{role}})."
+    },
+    "roles": {
+      "professor": "profesor",
+      "student": "študent"
+    }
+  },
+  "errors": {
+    "BAD_REQUEST": "Podatki niso veljavni.",
+    "UNAUTHENTICATED": "Najprej se prijavite.",
+    "FORBIDDEN": "Za to nimate dovoljenja.",
+    "FORBIDDEN_ORIGIN": "Zahteva ni prišla s te strani.",
+    "NOT_FOUND": "Tega ni mogoče najti.",
+    "CONFLICT": "Tega zdaj ni mogoče narediti. Osvežite stran in poskusite znova.",
+    "EXAM_NOT_OPEN": "Izpit se še ni začel.",
+    "EXAM_CLOSED": "Izpit je zaprt.",
+    "ENROLMENT_TAKEN": "To vpisno številko na tem izpitu že uporablja drug študent. Obrnite se na profesorja.",
+    "ENROLMENT_NOT_LISTED": "Te vpisne številke ni na seznamu za ta izpit. Obrnite se na profesorja.",
+    "LIMIT_EXCEEDED": "Dosežena je omejitev.",
+    "RELEASE_NOT_READY": "Rezultatov še ni mogoče objaviti.",
+    "DEMO_DISABLED": "Demo prijava je izklopljena.",
+    "AI_UNAVAILABLE": "Ocenjevanje z umetno inteligenco trenutno ni na voljo. Poskusite znova pozneje.",
+    "NOT_IMPLEMENTED": "Ta funkcija še ni na voljo.",
+    "INTERNAL": "Prišlo je do napake. Poskusite znova."
+  }
+}
