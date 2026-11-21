@@ -121,7 +121,7 @@ All limits live in `LIMITS` in `packages/contracts/src/limits.ts` (G12). Names a
 | --- | --- | --- | --- | --- | --- |
 | Local | `pnpm dev`: `wrangler dev` on :8787, Vite on :5173 (proxies `/api` to :8787), runner site on :5174 | `local` | local D1 with the demo data | fake | real |
 | CI and tests | GitHub Actions: Vitest in the Workers pool; Playwright against `wrangler dev` | `test` | fresh database per run | fake | fake (`POST /api/test/clock`) |
-| Deployment | the team's Cloudflare account, deployed on every merge to `main` | `production` | demo data | Workers AI | real |
+| Deployment | the team's Cloudflare account, deployed on every merge to `main` (below) | `production` | demo data | Workers AI (`fake` until grading needs it) | real |
 
 Worker variables and secrets. Names MUST be exactly these.
 
@@ -148,7 +148,45 @@ Build-time variables (Vite). The deploy workflow sets them from the same GitHub 
 | `VITE_DEMO_MODE` | `apps/web` | shows the demo sign-in buttons and the Demo banner; when unset, `"true"` in `vite dev` and `"false"` in builds |
 | `VITE_APP_ORIGIN` | `apps/runner` | the only origin the runner accepts messages from, and its `frame-ancestors` |
 
-Deployment names: Worker `codemark`, Pages project `codemark-runner`, D1 database `codemark-db`. Pages project names are global; if `codemark-runner` is taken, EloRSL picks a free name and sets `VITE_RUNNER_ORIGIN` and `RUNNER_ORIGIN` to match.
+Deployment names: Worker `codemark`, Pages project `codemark-runner`, D1 database `codemark-db`.
+
+### The deployment
+
+| What | Where |
+| --- | --- |
+| App and API | `https://codemark.elorsl.workers.dev`, the Worker `codemark` on the account's `elorsl.workers.dev` subdomain |
+| Runner site | `https://codemark-runner.pages.dev`, the production branch (`main`) of the Pages project `codemark-runner`. Each deploy also gets its own address, `https://<hash>.codemark-runner.pages.dev`; the app never uses those. |
+| Database | D1 `codemark-db` in Western Europe (`WEUR`); its ID is in `apps/api/wrangler.toml` |
+| Cron | the Cron Trigger `* * * * *` from `apps/api/wrangler.toml` |
+| Deploy | `.github/workflows/deploy.yml`, on every push to `main` (`conventions.md` section 12) |
+
+The deploy workflow runs these steps. When one fails, the ones after it don't run.
+
+1. Stop if a deploy credential or a variable below, other than `PROFESSOR_EMAILS`, is empty.
+2. Build the app with `VITE_DEMO_MODE` and `VITE_RUNNER_ORIGIN`, and the runner site with `VITE_APP_ORIGIN`.
+3. Apply new migrations to `codemark-db` (`wrangler d1 migrations apply codemark-db --remote`).
+4. Deploy the Worker, passing every Worker variable as `--var`. `APP_ENV` is always `production`, so the test endpoints never exist there.
+5. Deploy the runner site (`wrangler pages deploy`).
+
+Migrations go live before the new Worker does. For a few seconds the old Worker runs against the new schema, and if step 4 fails it stays that way until the next deploy, so a migration the deployed code can't work with breaks the demo.
+
+| Name | Kind | Set in GitHub | Value now |
+| --- | --- | --- | --- |
+| `APP_ORIGIN` | repository variable | Settings → Secrets and variables → Actions → Variables | `https://codemark.elorsl.workers.dev` |
+| `RUNNER_ORIGIN` | repository variable | same | `https://codemark-runner.pages.dev` |
+| `DEMO_MODE` | repository variable | same | `true` |
+| `AI_PROVIDER` | repository variable | same | `fake` |
+| `AI_MODEL` | repository variable | same | `@cf/qwen/qwen3-30b-a3b-fp8` |
+| `PROFESSOR_EMAILS` | repository variable | same | not set, so nobody gets the professor role through OAuth |
+| `APP_ENV` | fixed in `deploy.yml` | | `production` |
+| `CLOUDFLARE_API_TOKEN` | secret in the environment `production` | Settings → Environments → `production` | an account API token with Workers Scripts Edit, D1 Edit, Cloudflare Pages Edit and Account Settings Read |
+| `CLOUDFLARE_ACCOUNT_ID` | secret in the environment `production` | same | the team's Cloudflare account |
+
+- The `[vars]` in `apps/api/wrangler.toml` are only the local values; the deploy replaces every one. Rok changes a deployed value in the repository variable, and it takes effect at the next deploy.
+- Only `main` can use the environment `production`, so a workflow on another branch can't read the deploy credentials. If the token leaks, Rok rolls it (Cloudflare: Manage Account → Account API Tokens) and puts the new value in the environment.
+- The public Actions logs show every repository variable. `PROFESSOR_EMAILS` will hold real emails, so Rok decides how it's set before OAuth (M2).
+- Not there yet: the `AI` binding, added to `wrangler.toml` when grading calls Workers AI (`AI_PROVIDER` stays `fake` until then), and the OAuth secrets, which a Cloudflare administrator sets as Cloudflare secrets (`wrangler secret put`) when OAuth lands in M2.
+- The deployment's database was seeded once, on 2026-11-21. A Cloudflare administrator seeds it from `apps/api` with `pnpm exec tsx seed/generate.ts`, then `pnpm exec wrangler d1 execute codemark-db --remote --file=seed/demo.sql`. The seed is plain `INSERT` statements, so running it again on a seeded database fails on the first existing row.
 
 ## 6. Security rules
 
@@ -167,7 +205,7 @@ tzuntar reviews every change that touches these rules.
 | SEC-9 | Markdown from professors is rendered with `react-markdown` with raw HTML disabled. Student code is shown only as text in CodeMirror. MUST NOT use `dangerouslySetInnerHTML`. |
 | SEC-10 | `GradingRequest` is a strict schema with no field for a name, an email, an enrolment number, a user ID, a test input or an expected output. The prompt tells the model that comments and strings in the code are student text, never instructions. |
 | SEC-11 | The professor role comes only from `PROFESSOR_EMAILS` at each OAuth sign-in, or from the demo seed. No endpoint changes a user's role. |
-| SEC-12 | Secrets live only in Cloudflare secrets and in `.dev.vars` (git-ignored). Workers AI needs no key. |
+| SEC-12 | The Worker's secrets live only in Cloudflare secrets and in `.dev.vars` (git-ignored). The deploy workflow's Cloudflare API token and account ID live only in the GitHub environment `production`, which only `main` can use (section 5). Workers AI needs no key. |
 | SEC-13 | `DEMO_MODE` goes to `"false"` before any exam with real students. Part 1 has no real students. |
 
 ## 7. Capacity rules
