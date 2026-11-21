@@ -60,7 +60,7 @@ These apply to every change, in every module.
 | G14 | The AI is called only through the `AiProvider` interface. A `GradingRequest` MUST NOT contain a name, an email, an enrolment number, a user ID, a test input or an expected output. Local work and CI use the AI fake. |
 | G15 | Each endpoint has tests for: the normal case, each error code it can return, a signed-out caller, a non-member and a member with the wrong role. Tests use the fake clock and the AI fake. |
 | G16 | MUST NOT add a runtime dependency (code that ships to the browser, the Worker or the runner site) that isn't in the stack table in `docs/architecture.md` without Rok's approval. Dev-only tools that serve the stack (`@types/*`, `typescript-eslint`, ESLint and Prettier plugins, test helpers, a script runner for `pnpm dev`) MAY be added as dev dependencies; list them in the pull request. |
-| G17 | Secrets go only in `.dev.vars` (local, never committed) and Cloudflare secrets (deployment). MUST NOT commit a secret or a real student's data. |
+| G17 | Secrets go only in `.dev.vars` (local, never committed), Cloudflare secrets (the deployed Worker) and the GitHub environment `production` (the deploy workflow's Cloudflare credentials, section 12). MUST NOT commit a secret or a real student's data. MUST NOT put either in a GitHub repository variable, an issue or a pull request: the repository is public, and its Actions logs show every repository variable. |
 | G18 | Change only files your role owns (see `.github/CODEOWNERS` and your role file). Your role log in `docs/log/` counts as yours (G20). To change another role's files, open a pull request that their owner reviews. |
 | G19 | Commits look like a person wrote them. MUST NOT spam commits: one commit per finished, working step, usually 1 to 5 per pull request, and a fix to your own unpushed commit is amended into it instead of added as a new one. Titles are short, plain sentences in the imperative, at most 60 characters, with no prefix (`feat:`, `fix(api):`, `chore:`), no tags in brackets, no emoji and no full stop at the end. A description is optional: only when the title isn't enough, one to three plain sentences on what changed and why, with no headings, no list of every file and no "This commit...". Pull request titles follow the same rule, because a squash merge turns them into the commit on `main`. Good: `Add the submit endpoint`, `Fix the countdown after a tab switch`. Bad: `feat(submissions): implement submission endpoint with retry key support`. |
 | G20 | Every pull request that adds something other code or people can use, or makes the code differ from a doc, MUST record it in the author's role log (`docs/log/`) in the same pull request (section 11). Before using another module's functions, hooks or components, read that module's role log. |
@@ -100,18 +100,20 @@ Every workspace package is named `@codemark/<folder>` (for example `@codemark/co
 
 ## 7. Commands
 
-EloRSL creates these in milestone 1. Until then, they are the plan.
+These exist since milestone 1. Run them from the repository root; they work the same in PowerShell on Windows and in bash (CI).
 
 | Command | What it does |
 | --- | --- |
 | `pnpm install` | install everything |
-| `pnpm dev` | app on :5173, API on :8787, runner site on :5174, with a local database |
+| `pnpm dev` | app on :5173, API on :8787, runner site on :5174, with a local database; creates an empty `apps/web/dist` when it's missing, because the Worker's static assets point there |
 | `pnpm db:reset` | fresh local database with the demo data (`docs/demo-data.md`); stop `pnpm dev` first |
 | `pnpm db:generate` | a new migration after you change a `schema.ts` |
-| `pnpm cron` | one local cron run (closes due exams, runs up to 2 due jobs); needs `pnpm dev` running |
+| `pnpm cron` | one local cron run: runs up to 2 due jobs, and closes due exams once butarca's `closeDueExams` exists; needs `pnpm dev` running |
 | `pnpm test` | unit tests and API tests (in the Workers runtime) |
-| `pnpm e2e` | Playwright, including the Gate 1 script |
+| `pnpm e2e` | Playwright, including the Gate 1 script. Until the Gate 1 script lands (M2) there are no tests and it passes empty. Install Chromium once with `pnpm --filter @codemark/e2e exec playwright install chromium` |
+| `pnpm build` | builds the app, then the runner site and a dry run of the Worker deploy; CI and the deploy run it |
 | `pnpm typecheck`, `pnpm lint`, `pnpm format:check` | what CI checks |
+| `pnpm format` | fixes formatting with Prettier |
 | `pnpm check:i18n` | fails if `sl.json` and `en.json` have different keys |
 | `npx --yes shadcn@4.23.0 add <component>` | adds a shadcn/ui component, run inside `apps/web` (`pnpm dlx shadcn` fails in this workspace) |
 
@@ -134,14 +136,14 @@ EloRSL creates these in milestone 1. Until then, they are the plan.
 | --- | --- |
 | `docs/glossary.md` | what each term means |
 | `docs/scope.md` | what Part 1 includes (S1 to S43, Core items marked), what it excludes, and the milestones |
-| `docs/architecture.md` | the stack, decisions D1 to D28, limits, security rules, environments, failure handling |
+| `docs/architecture.md` | the stack, decisions D1 to D28, limits, security rules, environments, the deployment, failure handling |
 | `docs/data-model.md` | every table, column, constraint and owner |
 | `docs/types.md` | every shared type: exam content, API bodies and responses, errors, jobs, notices, runner, AI |
 | `docs/api.md` | all 33 endpoints: access, body, response, errors and rules |
 | `docs/internal-interfaces.md` | the functions modules call on each other, job and notice rules, the runner protocol, the AI interface, the cron |
 | `docs/flows.md` | the exam lifecycle and every main flow as numbered steps |
 | `docs/adr/` | the six architecture decisions and the rules that follow from them |
-| `docs/conventions.md` | how to read the docs, who decides, the team, global rules, layout, commands, definition of done |
+| `docs/conventions.md` | how to read the docs, who decides, the team, global rules, layout, commands, definition of done, access, first-time setup, pull requests and merging |
 | `docs/roles/` | each role's tasks, inputs, outputs, stand-ins, tests and definition of done (section 4) |
 | `docs/gate1.md` | the Gate 1 script step by step, with expected results |
 | `docs/demo-data.md` | the demo accounts, exams and submissions the seed creates |
@@ -194,3 +196,41 @@ Newest entry first in its section, one entry per item, at most five lines. The e
 - Why: at 2 seconds, a full-size draft went over the D1 write limit in the limits test.
 - Added: 2026-11-25, pull request #21.
 ```
+
+## 12. Access, pull requests and the deployment
+
+### Access
+
+- The repository `EloRSL/CodeMark` is public: anyone can read the code, the pull requests and the Actions logs. Rok is its only admin. Teammates are collaborators with write access (D23): they push branches and open pull requests, but can't change settings, secrets or variables.
+- The Cloudflare account has two administrators, Rok and tzuntar (D23). Only they run commands against the deployment (`--remote`), read the deployed Worker's logs (`pnpm exec wrangler tail codemark` in `apps/api`, or the Cloudflare dashboard), and set the Worker's Cloudflare secrets. Only Rok changes the GitHub variables and the deploy credentials. Everyone else works locally and asks one of them.
+
+### First-time setup
+
+1. Install Node 22 or newer (CI uses 26) and pnpm 10.34.9 with `npm install -g pnpm@10.34.9`. The root `package.json` pins this pnpm version.
+2. Accept the GitHub invitation (from the email, or at `https://github.com/EloRSL/CodeMark/invitations`), then clone with `git clone https://github.com/EloRSL/CodeMark.git`.
+3. Copy `AGENTS.md` and `CLAUDE.md` from Rok into the root of the clone (section 10).
+4. Run `pnpm install`, `pnpm db:reset` and `pnpm dev`, then open `http://localhost:5173`. The sign-in page has a button for each demo account.
+5. You need no `wrangler login`, no Cloudflare account and no `.dev.vars`: local work uses a local database and the AI fake. Nothing goes in `.dev.vars` before OAuth (M2).
+6. Run `pnpm db:reset` again after you pull a new migration (`apps/api/drizzle/`) or a change to the seed (`apps/api/seed/`).
+
+### Branches and pull requests
+
+1. Start every task from an up-to-date `main` (`git switch main`, then `git pull`), on a short branch named `<github-name>/<topic>` (D19), for example `timursic2/runner-timeouts`.
+2. Push the branch and open a pull request into `main`. Its title follows G19, and its description names the scope and rule IDs (section 8).
+3. CI (`.github/workflows/ci.yml`, job `check`) runs on every pull request and on every push to it: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm check:i18n`, `pnpm test`, `pnpm build`, then Chromium for Playwright and `pnpm e2e`. It takes about a minute and a half. A pull request can't be merged until `check` passes.
+4. CODEOWNERS asks the owners of the files you changed for a review automatically. GitHub requires no approval, but a change named in section 8 still needs tzuntar's review before it's merged.
+5. Rok merges every pull request. He is the final gate.
+
+A ruleset protects `main`: nobody can push to it directly, force-push or delete it, and the only way in is a pull request merged with a squash. The squash makes the pull request one commit on `main`, titled with the pull request title and, by default, without a description; the separate commits on your branch don't reach `main`. After the merge GitHub deletes the branch. Don't push to it again, because that re-creates it; start the next task on a new branch from `main`.
+
+### What a merge does
+
+Every merge to `main` deploys (`.github/workflows/deploy.yml`, `architecture.md` section 5). About a minute later the change is live at `https://codemark.elorsl.workers.dev`, which is also the demo (D24). One deploy runs at a time; a second merge waits for the first. A failed deploy shows red in the Actions tab, and the version before it stays live.
+
+### State on 2026-11-21
+
+- Merged and deployed: M1 tasks 1 to 9 of `roles/foundation.md`, in pull requests #1 and #2. On the deployment, demo sign-in, `me.get`, `me.update` (with the language switch) and `auth.logout` work. Every other endpoint answers `501 NOT_IMPLEMENTED` until its owner builds it, and the test endpoints answer `404`, as they must outside `APP_ENV=test`.
+- The deployment's database holds the four demo accounts and nothing else.
+- Every teammate has a pending GitHub invitation with write access. tzuntar isn't an administrator of the Cloudflare account yet.
+- Stand-ins until their owners deliver (`roles/foundation.md`, "You use"): `exams.status` answers `501` until butarca's `getExam` and `stateOf` exist; the cron closes no exams until butarca's `closeDueExams`; `grade.submission` jobs are marked done without grading until lukaazman's `gradeSubmissionJob`.
+- Next for EloRSL: M1 task 10, the limits test on the deployment, once butarca's save and publish endpoints exist.
