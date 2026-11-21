@@ -6,7 +6,7 @@ What the foundation and accounts code adds to the docs, and where it differs fro
 
 ### Deploy workflow
 - Where: `.github/workflows/deploy.yml`, on every push to `main`.
-- Reads: the GitHub secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`, and the repository variables `APP_ORIGIN`, `RUNNER_ORIGIN`, `DEMO_MODE`, `AI_PROVIDER`, `AI_MODEL` and `PROFESSOR_EMAILS` (may be empty). `APP_ENV` is always `production`.
+- Reads: the secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` from the GitHub environment `production`, which only `main` may use, and the repository variables `APP_ORIGIN`, `RUNNER_ORIGIN`, `DEMO_MODE`, `AI_PROVIDER`, `AI_MODEL` and `PROFESSOR_EMAILS` (may be empty). `APP_ENV` is always `production`.
 - What: builds the app and the runner site, applies the D1 migrations, deploys the Worker `codemark` and the Pages project `codemark-runner`. No Workers AI binding yet; it arrives when grading needs it.
 - Added: 2026-11-21, M1 task 9 pull request.
 
