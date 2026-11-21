@@ -2,20 +2,32 @@ name = "codemark"
 main = "src/app.ts"
 compatibility_date = "2026-11-01"
 
-# database_id is set with the deployment (M1 task 9); local runs don't need it.
+# The built React app (A-1). Locally Vite serves it, so pnpm dev starts with an empty folder.
+[assets]
+directory = "../web/dist"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
+not_found_handling = "single-page-application"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "codemark-db"
+database_id = "967da10f-1579-4de1-8d50-77cd1b7b04b3"
 migrations_dir = "drizzle"
 
 # Local values (architecture.md section 5). Tests set APP_ENV to "test" in vitest.config.ts.
+# The deploy workflow replaces every one with --var from the GitHub repository variables.
 [vars]
 APP_ENV = "local"
 APP_ORIGIN = "http://localhost:5173"
+RUNNER_ORIGIN = "http://localhost:5174"
 DEMO_MODE = "true"
+AI_PROVIDER = "fake"
+AI_MODEL = "@cf/qwen/qwen3-30b-a3b-fp8"
+PROFESSOR_EMAILS = ""
 
 # The cron (internal-interfaces.md section 4). Locally it runs only through pnpm cron.
 [triggers]
 crons = ["* * * * *"]
 
-# The other variables and static assets arrive with later M1 tasks.
+# The AI binding arrives when grading needs Workers AI.
