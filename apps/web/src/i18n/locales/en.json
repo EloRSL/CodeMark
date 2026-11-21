@@ -1,0 +1,46 @@
+{
+  "common": {
+    "appName": "CodeMark",
+    "demoBanner": "Demo mode: all users and data are made up.",
+    "language": "Language",
+    "locales": {
+      "sl": "Slovenščina",
+      "en": "English"
+    },
+    "loading": "Loading …",
+    "networkError": "The server isn't answering. Check your connection and try again.",
+    "signOut": "Sign out"
+  },
+  "accounts": {
+    "signIn": {
+      "title": "Sign in",
+      "demoHeading": "Demo accounts",
+      "demoAs": "Sign in as {{name}}"
+    },
+    "home": {
+      "signedInAs": "You're signed in as {{name}} ({{role}})."
+    },
+    "roles": {
+      "professor": "professor",
+      "student": "student"
+    }
+  },
+  "errors": {
+    "BAD_REQUEST": "The data isn't valid.",
+    "UNAUTHENTICATED": "Please sign in first.",
+    "FORBIDDEN": "You aren't allowed to do this.",
+    "FORBIDDEN_ORIGIN": "The request didn't come from this site.",
+    "NOT_FOUND": "This can't be found.",
+    "CONFLICT": "This can't be done right now. Reload the page and try again.",
+    "EXAM_NOT_OPEN": "The exam hasn't opened yet.",
+    "EXAM_CLOSED": "The exam is closed.",
+    "ENROLMENT_TAKEN": "Another student on this exam already uses this enrolment number. Ask the professor.",
+    "ENROLMENT_NOT_LISTED": "This enrolment number isn't on the list for this exam. Ask the professor.",
+    "LIMIT_EXCEEDED": "A limit has been reached.",
+    "RELEASE_NOT_READY": "The results can't be released yet.",
+    "DEMO_DISABLED": "Demo sign-in is turned off.",
+    "AI_UNAVAILABLE": "AI grading isn't available right now. Try again later.",
+    "NOT_IMPLEMENTED": "This feature isn't available yet.",
+    "INTERNAL": "Something went wrong. Try again."
+  }
+}

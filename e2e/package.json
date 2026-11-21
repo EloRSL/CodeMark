@@ -1,0 +1,13 @@
+{
+  "name": "@codemark/e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test --pass-with-no-tests",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:",
+    "typescript": "catalog:"
+  }
+}

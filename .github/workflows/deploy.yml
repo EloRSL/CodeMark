@@ -1,0 +1,60 @@
+name: Deploy
+
+# Every merge to main deploys the Worker and the runner site (architecture.md section 5).
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# One deploy at a time; a newer one waits instead of stopping a migration halfway.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      APP_ORIGIN: ${{ vars.APP_ORIGIN }}
+      RUNNER_ORIGIN: ${{ vars.RUNNER_ORIGIN }}
+      DEMO_MODE: ${{ vars.DEMO_MODE }}
+      AI_PROVIDER: ${{ vars.AI_PROVIDER }}
+      AI_MODEL: ${{ vars.AI_MODEL }}
+      PROFESSOR_EMAILS: ${{ vars.PROFESSOR_EMAILS }}
+    steps:
+      - name: Check the secrets and repository variables
+        # PROFESSOR_EMAILS may be empty: then nobody becomes a professor through OAuth.
+        run: |
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID APP_ORIGIN RUNNER_ORIGIN DEMO_MODE AI_PROVIDER AI_MODEL; do
+            if [ -z "${!name}" ]; then echo "::error::$name is not set"; exit 1; fi
+          done
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build the app and the runner site
+        run: |
+          VITE_DEMO_MODE="$DEMO_MODE" VITE_RUNNER_ORIGIN="$RUNNER_ORIGIN" pnpm --filter @codemark/web build
+          VITE_APP_ORIGIN="$APP_ORIGIN" pnpm --filter @codemark/runner build
+      - name: Apply the database migrations
+        run: pnpm --filter @codemark/api exec wrangler d1 migrations apply codemark-db --remote
+      - name: Deploy the Worker
+        # APP_ENV is fixed here, so the test endpoints can never be switched on in the deployment.
+        run: |
+          pnpm --filter @codemark/api exec wrangler deploy \
+            --var "APP_ENV:production" \
+            --var "APP_ORIGIN:$APP_ORIGIN" \
+            --var "RUNNER_ORIGIN:$RUNNER_ORIGIN" \
+            --var "DEMO_MODE:$DEMO_MODE" \
+            --var "AI_PROVIDER:$AI_PROVIDER" \
+            --var "AI_MODEL:$AI_MODEL" \
+            --var "PROFESSOR_EMAILS:$PROFESSOR_EMAILS"
+      - name: Deploy the runner site
+        run: pnpm --filter @codemark/api exec wrangler pages deploy ../runner/dist --project-name codemark-runner --branch main

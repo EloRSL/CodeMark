@@ -1,0 +1,32 @@
+{
+  "name": "codemark",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "db:reset": "pnpm --filter @codemark/api db:reset",
+    "db:generate": "pnpm --filter @codemark/api db:generate",
+    "cron": "node -e \"fetch('http://localhost:8787/__scheduled').then(r => r.text()).then(console.log, () => { console.error('pnpm cron needs pnpm dev running'); process.exitCode = 1; })\"",
+    "test": "vitest run",
+    "e2e": "pnpm --filter @codemark/e2e e2e",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:i18n": "tsx apps/web/scripts/check-i18n.ts",
+    "build": "pnpm --filter @codemark/web build && pnpm -r --filter=!@codemark/web build"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  }
+}
