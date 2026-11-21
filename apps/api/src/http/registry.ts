@@ -22,12 +22,12 @@ const allEndpoints: Record<Key, EndpointDef> = { ...endpoints, ...testEndpoints 
 
 // The owner of each module's endpoints (docs/api.md index).
 const owners: Record<ModuleName, string> = {
-  platform: 'P1',
-  accounts: 'P1',
-  exams: 'P2',
-  submissions: 'P4',
-  grading: 'P5',
-  review: 'P6',
+  platform: 'EloRSL',
+  accounts: 'EloRSL',
+  exams: 'butarca',
+  submissions: 'tzuntar',
+  grading: 'lukaazman',
+  review: 'bjaksic84',
 };
 
 /** internal-interfaces.md section 1, with user, examId and membership narrowed by the registry. */

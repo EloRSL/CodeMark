@@ -36,6 +36,11 @@ describe('stub', () => {
     expect(body.error.message).toContain(key);
   });
 
+  it('names the owner by GitHub name, as docs/api.md does', async () => {
+    const res = await stubs.request('/api/exams', { method: 'GET' }, env);
+    expect(ApiErrorBody.parse(await res.json()).error.message).toContain('(owner: butarca)');
+  });
+
   it('leaves an implemented endpoint alone', () => {
     const me = app.routes.filter((r) => r.method === 'GET' && r.path === '/api/me');
     expect(me).toHaveLength(1);
