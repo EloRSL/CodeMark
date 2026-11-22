@@ -60,6 +60,7 @@ export const ExamForProfessor = z.object({
   joinCode: z.string(),
   settings: ExamSettings,
   draft: ExamContent,
+  finalVersionTasks: z.array(z.object({ id: Uuid, title: z.string() })),
   versions: z.array(ExamVersionInfo), // oldest first
   adjustments: z.array(TaskAdjustment),
 });

@@ -5,6 +5,7 @@ import {
   CheckSummary,
   CreateExamBody,
   ExamSettings,
+  LIMITS,
   safeReturnTo,
   Task,
   UpdateMeBody,
@@ -90,6 +91,12 @@ describe('contracts', () => {
     expect(ok(Task, { ...valid, tests: [test(4, 'public')] })).toBe(false);
     expect(ok(Task, { ...valid, tests: [test(4, 'hidden'), test(4, 'hidden')] })).toBe(false);
     expect(ok(Task, { ...valid, timeLimitMs: 999 })).toBe(false);
+    expect(ok(Task, { ...valid, instructions: 'x'.repeat(LIMITS.taskInstructionsChars) })).toBe(
+      true,
+    );
+    expect(ok(Task, { ...valid, instructions: 'x'.repeat(LIMITS.taskInstructionsChars + 1) })).toBe(
+      false,
+    );
   });
 
   it('needs closesAt exactly for a non-practice exam, and after opensAt', () => {

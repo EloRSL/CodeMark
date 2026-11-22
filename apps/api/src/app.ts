@@ -7,6 +7,7 @@ import { stub } from './http/registry';
 import type { ScopeResolvers } from './modules/accounts';
 import { accountRoutes } from './modules/accounts/routes';
 import { testRoutes } from './modules/platform/routes';
+import { examRoutes } from './modules/exams/routes';
 import { jobHandlers, scheduled } from './scheduled';
 
 /** Module routes first, then a 501 stub for every endpoint no module implements yet. */
@@ -16,6 +17,7 @@ export function createApp(appEnv: string, resolvers: Partial<ScopeResolvers> = {
   app.onError(onError);
   app.notFound(notFound);
   accountRoutes(app);
+  examRoutes(app);
   if (appEnv === 'test') testRoutes(app, jobHandlers); // otherwise /api/test/* is 404 (api.md)
   for (const key of Object.keys(endpoints) as EndpointKey[]) stub(app, key);
   return app;

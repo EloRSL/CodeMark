@@ -5,6 +5,7 @@ export const LIMITS = {
   criteriaPerTask: 20,
   publicTestsPerTask: 20,
   hiddenTestsPerTask: 20,
+  taskInstructionsChars: 132500,
   testIoBytes: 8192,
   versionBytes: 524288,
   timeLimitMs: { min: 1000, max: 10000, default: 2000 },

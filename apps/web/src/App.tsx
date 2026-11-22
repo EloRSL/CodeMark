@@ -14,6 +14,10 @@ import { DemoBanner } from '@/lib/DemoBanner';
 import { ME_QUERY_KEY, useMe } from '@/lib/me';
 import { LanguageSwitch } from '@/modules/accounts/LanguageSwitch';
 import { SignInPage } from '@/modules/accounts/SignInPage';
+import { ExamsPage } from '@/modules/exams/ExamsPage';
+import { ExamPage } from '@/modules/exams/ExamPage';
+import { ExamLayout } from '@/modules/exams/ExamLayout';
+import { ExamPreviewPage } from '@/modules/exams/ExamPreviewPage';
 
 const queryClient = new QueryClient();
 
@@ -28,11 +32,27 @@ export function App() {
           <Route path="/sign-in" element={<SignInPage />} />
           <Route element={<SignedInLayout />}>
             <Route index element={<HomePage />} />
+            <Route path="exams/:examId" element={<ExamLayout />}>
+              <Route element={<ExamPage />}>
+                <Route index element={<></>} />
+                <Route path="preview" element={<ExamPreviewPage />} />
+              </Route>
+            </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
+  );
+}
+
+function HomePage() {
+  const { t } = useTranslation();
+  const { me } = useMe();
+  if (!me) return null;
+  if (me.role === 'professor') return <ExamsPage />;
+  return (
+    <p>{t('accounts.home.signedInAs', { name: me.name, role: t(`accounts.roles.${me.role}`) })}</p>
   );
 }
 
@@ -86,15 +106,5 @@ function SignedInLayout() {
         <Outlet />
       </main>
     </>
-  );
-}
-
-// Placeholder until butarca's exam list takes the home page.
-function HomePage() {
-  const { t } = useTranslation();
-  const { me } = useMe();
-  if (!me) return null;
-  return (
-    <p>{t('accounts.home.signedInAs', { name: me.name, role: t(`accounts.roles.${me.role}`) })}</p>
   );
 }

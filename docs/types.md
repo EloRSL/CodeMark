@@ -116,7 +116,7 @@ type TestCase = {
 type Task = {
   id: Uuid;
   title: string;             // 1 to 200 characters
-  instructions: string;      // Markdown, at most 20000 characters
+  instructions: string;      // Markdown, at most LIMITS.taskInstructionsChars characters
   tips: string;              // Markdown, at most 10000 characters
   starterCode: string;       // at most LIMITS.codeBytes
   timeLimitMs: number;       // integer, LIMITS.timeLimitMs.min to .max
@@ -379,6 +379,7 @@ type ExamForProfessor = {
   joinCode: string;
   settings: ExamSettings;
   draft: ExamContent;
+  finalVersionTasks: { id: Uuid; title: string }[]; // task names from the final version for adjustments
   versions: ExamVersionInfo[];    // oldest first
   adjustments: TaskAdjustment[];
 };

@@ -8,6 +8,7 @@ import { app } from '../../app';
 import { createDb } from '../../db/client';
 import { examMembers, sessions, users } from '../../db/schema';
 import { clock } from '../../platform/clock';
+import { addMemberQuery } from './index';
 
 const db = createDb(env.DB);
 const T0 = Date.parse('2026-12-01T10:00:00.000Z');
@@ -129,6 +130,27 @@ describe('me', () => {
   it('me.get returns the caller', async () => {
     const bor = await signIn('student2');
     expect(Me.parse(await (await bor.request('GET', '/me')).json())).toEqual(bor.me);
+  });
+
+  describe('addMemberQuery', () => {
+    it('creates a membership through the public query for use in a transaction batch', async () => {
+      const member = {
+        examId: crypto.randomUUID(),
+        userId: DEMO_USERS.professor.id,
+        role: 'professor' as const,
+        enrolmentNo: null,
+        joinedAt: T0,
+      };
+
+      await db.batch([addMemberQuery(db, member)]);
+
+      const stored = await db
+        .select()
+        .from(examMembers)
+        .where(eq(examMembers.examId, member.examId))
+        .get();
+      expect(stored).toEqual(member);
+    });
   });
 
   it("me.update changes the caller's row and never an exam membership", async () => {

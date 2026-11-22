@@ -33,7 +33,7 @@ export const Task = z
   .object({
     id: Uuid,
     title: z.string().min(1).max(200),
-    instructions: z.string().max(20000), // Markdown
+    instructions: z.string().max(LIMITS.taskInstructionsChars), // Markdown, including merged legacy fields
     tips: z.string().max(10000), // Markdown
     starterCode: boundedText(LIMITS.codeBytes),
     timeLimitMs: z.number().int().min(LIMITS.timeLimitMs.min).max(LIMITS.timeLimitMs.max),

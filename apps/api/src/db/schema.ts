@@ -2,3 +2,4 @@
 // Each module adds its own line when it adds its schema.ts.
 export * from '../modules/accounts/schema';
 export * from '../modules/platform/schema';
+export * from '../modules/exams/schema';
