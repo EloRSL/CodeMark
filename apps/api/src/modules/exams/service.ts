@@ -27,9 +27,6 @@ export type ExamRecord = ExamTiming & {
   currentVersion: number;
   createdBy: string;
   settings: ExamSettings;
-  joinCode: string;
-  draft: ExamContent;
-  updatedAt: number;
 };
 
 const JOIN_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -39,9 +36,9 @@ function formatJoinCode(code: string): string {
 }
 
 export function generateJoinCode(): string {
-  let code = '';
-  for (let i = 0; i < 8; i++) code += JOIN_CHARS[Math.floor(Math.random() * JOIN_CHARS.length)];
-  return code;
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  const code = [...bytes].map((byte) => JOIN_CHARS[byte % JOIN_CHARS.length]).join('');
+  return `${code.slice(0, 4)}-${code.slice(4)}`;
 }
 
 async function examRow(db: Db, examId: string) {
@@ -49,23 +46,24 @@ async function examRow(db: Db, examId: string) {
 }
 
 export async function getExam(db: Db, examId: string): Promise<ExamRecord | null> {
-  const row = await examRow(db, examId);
+  const row = await db
+    .select({
+      id: exams.id,
+      title: exams.title,
+      phase: exams.phase,
+      opensAt: exams.opensAt,
+      closesAt: exams.closesAt,
+      closedAt: exams.closedAt,
+      practice: exams.practice,
+      currentVersion: exams.currentVersion,
+      createdBy: exams.createdBy,
+      settings: exams.settings,
+    })
+    .from(exams)
+    .where(eq(exams.id, examId))
+    .get();
   if (!row) return null;
-  return {
-    id: row.id,
-    title: row.title,
-    joinCode: row.joinCode,
-    phase: row.phase,
-    opensAt: row.opensAt,
-    closesAt: row.closesAt,
-    closedAt: row.closedAt,
-    practice: row.practice,
-    currentVersion: row.currentVersion,
-    createdBy: row.createdBy,
-    settings: row.settings,
-    draft: row.draft,
-    updatedAt: row.updatedAt,
-  };
+  return row;
 }
 
 export async function getExamState(db: Db, examId: string, now: number) {
@@ -85,7 +83,12 @@ export async function getVersion(
   createdAt: number;
 } | null> {
   const row = await db
-    .select()
+    .select({
+      snapshot: examVersions.snapshot,
+      studentView: examVersions.studentView,
+      note: examVersions.note,
+      createdAt: examVersions.createdAt,
+    })
     .from(examVersions)
     .where(and(eq(examVersions.examId, examId), eq(examVersions.version, version)))
     .get();
@@ -102,7 +105,11 @@ export async function getFinalVersion(
   db: Db,
   examId: string,
 ): Promise<{ version: number; snapshot: ExamContent }> {
-  const exam = await examRow(db, examId);
+  const exam = await db
+    .select({ currentVersion: exams.currentVersion })
+    .from(exams)
+    .where(eq(exams.id, examId))
+    .get();
   if (!exam) throw new ApiError('NOT_FOUND', 'No such exam');
   const version = await getVersion(db, examId, exam.currentVersion);
   if (!version) throw new ApiError('NOT_FOUND', 'The exam has no final version');
@@ -120,7 +127,10 @@ export async function getTaskAdjustments(db: Db, examId: string): Promise<TaskAd
 }
 
 function summary(
-  row: typeof exams.$inferSelect,
+  row: Pick<
+    typeof exams.$inferSelect,
+    'id' | 'title' | 'phase' | 'opensAt' | 'closesAt' | 'closedAt' | 'practice' | 'currentVersion'
+  >,
   role: 'professor' | 'student',
   now: number,
 ): ExamSummary {
@@ -192,12 +202,22 @@ export async function createExam(
 
 export async function listExams(db: Db, userId: string, now: number): Promise<ExamSummary[]> {
   const rows = await db
-    .select({ exam: exams, role: examMembers.role })
+    .select({
+      id: exams.id,
+      title: exams.title,
+      phase: exams.phase,
+      opensAt: exams.opensAt,
+      closesAt: exams.closesAt,
+      closedAt: exams.closedAt,
+      practice: exams.practice,
+      currentVersion: exams.currentVersion,
+      role: examMembers.role,
+    })
     .from(exams)
     .innerJoin(examMembers, eq(exams.id, examMembers.examId))
     .where(eq(examMembers.userId, userId))
     .orderBy(desc(exams.opensAt));
-  return rows.map(({ exam, role }) => summary(exam, role, now));
+  return rows.map((row) => summary(row, row.role, now));
 }
 
 export async function getExamDetail(
@@ -207,10 +227,10 @@ export async function getExamDetail(
   callerRole: 'professor' | 'student',
   now: number,
 ): Promise<ExamForProfessor | ExamForStudent> {
-  const row = await examRow(db, examId);
-  if (!row) throw new ApiError('NOT_FOUND', 'No such exam');
-  const examSummary = summary(row, callerRole, now);
   if (callerRole === 'professor') {
+    const row = await examRow(db, examId);
+    if (!row) throw new ApiError('NOT_FOUND', 'No such exam');
+    const examSummary = summary(row, callerRole, now);
     const [versions, adjustments, finalVersionRows] = await db.batch([
       db
         .select({
@@ -250,6 +270,23 @@ export async function getExamDetail(
       })),
     };
   }
+  const row = await db
+    .select({
+      id: exams.id,
+      title: exams.title,
+      phase: exams.phase,
+      opensAt: exams.opensAt,
+      closesAt: exams.closesAt,
+      closedAt: exams.closedAt,
+      practice: exams.practice,
+      currentVersion: exams.currentVersion,
+      settings: exams.settings,
+    })
+    .from(exams)
+    .where(eq(exams.id, examId))
+    .get();
+  if (!row) throw new ApiError('NOT_FOUND', 'No such exam');
+  const examSummary = summary(row, 'student', now);
   const state = stateOf(
     {
       phase: row.phase,
@@ -262,7 +299,11 @@ export async function getExamDetail(
   );
   let view = null;
   if (state !== 'draft' && state !== 'scheduled') {
-    const version = await getVersion(db, examId, row.currentVersion);
+    const version = await db
+      .select({ studentView: examVersions.studentView })
+      .from(examVersions)
+      .where(and(eq(examVersions.examId, examId), eq(examVersions.version, row.currentVersion)))
+      .get();
     view = version?.studentView ?? null;
   }
   return { role: 'student', exam: examSummary, autocomplete: row.settings.autocomplete, view };

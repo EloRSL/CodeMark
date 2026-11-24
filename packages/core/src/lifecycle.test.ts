@@ -21,15 +21,20 @@ describe('stateOf', () => {
   it('handles closed_at and grace boundaries', () => {
     expect(stateOf({ ...base, closedAt: 4999 }, 4999)).toBe('closed');
     expect(stateOf({ ...base, closesAt: null }, 10000)).toBe('closed');
+    expect(stateOf(base, base.closesAt! - 1000)).toBe('open');
     expect(stateOf(base, base.closesAt! + LIMITS.graceMs - 1)).toBe('open');
     expect(stateOf(base, base.closesAt! + LIMITS.graceMs)).toBe('closed');
+    expect(stateOf(base, base.closesAt! + LIMITS.graceMs + 1000)).toBe('closed');
+    expect(stateOf(base, base.closesAt! + LIMITS.graceMs + 1000, 'student-id')).toBe('closed');
   });
 });
 
 describe('isOnTime', () => {
   it('checks practice and grace boundaries', () => {
     expect(isOnTime({ ...base, practice: true, closesAt: null }, 999999)).toBe(true);
+    expect(isOnTime(base, base.closesAt! - 1000)).toBe(true);
     expect(isOnTime(base, base.closesAt! + LIMITS.graceMs - 1)).toBe(true);
     expect(isOnTime(base, base.closesAt! + LIMITS.graceMs)).toBe(false);
+    expect(isOnTime(base, base.closesAt! + LIMITS.graceMs + 1000, 'student-id')).toBe(false);
   });
 });

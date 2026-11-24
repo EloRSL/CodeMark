@@ -5,8 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useOutletContext, useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { api, errorKey } from '@/lib/api';
-import { MarkdownContent } from './MarkdownContent';
-import { taskInstructionsMarkdown } from './taskInstructions';
+import { TaskTextContent } from './TaskTextContent';
 
 export function ExamPreviewPage() {
   const { examId = '' } = useParams();
@@ -41,12 +40,7 @@ export function ExamPreviewPage() {
       {view.tasks.map((task) => (
         <article key={task.id} className="space-y-3 rounded border p-4">
           <h2 className="text-xl font-medium">{task.title}</h2>
-          <MarkdownContent
-            source={taskInstructionsMarkdown(task, {
-              tips: t('exams.fields.tips'),
-              starterCode: t('exams.fields.starterCode'),
-            })}
-          />
+          <TaskTextContent task={task} />
           <ul className="list-disc pl-5">
             {task.criteria.map((criterion) => (
               <li key={criterion.id}>

@@ -1,4 +1,10 @@
-import type { Criterion, ExamContent, Task, TestCase } from '@codemark/contracts';
+import type {
+  Criterion,
+  ExamContent,
+  Task,
+  TestCase,
+  UpdateSettingsBody,
+} from '@codemark/contracts';
 import { LIMITS } from '@codemark/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -6,8 +12,8 @@ import { useTranslation } from 'react-i18next';
 import { Outlet, useMatch, useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { api, errorKey } from '@/lib/api';
-import { MarkdownContent } from './MarkdownContent';
-import { taskInstructionsMarkdown } from './taskInstructions';
+import { formatLjubljanaDateTime, parseLjubljanaDateTime } from './dateTime';
+import { TaskTextContent } from './TaskTextContent';
 
 function defaultTask(title: string): Task {
   return {
@@ -62,8 +68,10 @@ export function ExamPage() {
       setDraft(detail.data.draft);
       setActiveTaskId(detail.data.draft.tasks[0]?.id ?? null);
       setSettingsTitle(detail.data.exam.title);
-      setOpensAt(detail.data.exam.opensAt.slice(0, 16));
-      setClosesAt(detail.data.exam.closesAt?.slice(0, 16) ?? '');
+      setOpensAt(formatLjubljanaDateTime(detail.data.exam.opensAt));
+      setClosesAt(
+        detail.data.exam.closesAt ? formatLjubljanaDateTime(detail.data.exam.closesAt) : '',
+      );
       setScale(detail.data.settings.scale);
       setThresholds(detail.data.settings.thresholds);
       setAutocomplete(detail.data.settings.autocomplete);
@@ -92,16 +100,30 @@ export function ExamPage() {
     onSuccess: () => client.invalidateQueries({ queryKey: ['exam', examId] }),
   });
   const updateSettings = useMutation({
-    mutationFn: () =>
-      api('exams.updateSettings', {
-        params: { examId },
-        body: {
-          title: settingsTitle,
-          opensAt: opensAt ? new Date(opensAt).toISOString() : undefined,
-          closesAt: closesAt ? new Date(closesAt).toISOString() : undefined,
-          settings: { scale, thresholds, autocomplete },
-        },
-      }),
+    mutationFn: () => {
+      if (detail.data?.role !== 'professor') throw new Error('Professor exam data is unavailable');
+      const { exam, settings } = detail.data;
+      const body: UpdateSettingsBody = {};
+      if (settingsTitle !== exam.title) body.title = settingsTitle;
+      if (opensAt !== formatLjubljanaDateTime(exam.opensAt))
+        body.opensAt = parseLjubljanaDateTime(opensAt);
+      if (closesAt !== (exam.closesAt ? formatLjubljanaDateTime(exam.closesAt) : '') && closesAt) {
+        body.closesAt = parseLjubljanaDateTime(closesAt);
+      }
+      if (
+        scale !== settings.scale ||
+        JSON.stringify(thresholds) !== JSON.stringify(settings.thresholds) ||
+        autocomplete !== settings.autocomplete
+      ) {
+        body.settings = { scale, thresholds, autocomplete };
+      }
+      return api('exams.updateSettings', { params: { examId }, body });
+    },
+    onSuccess: () => client.invalidateQueries({ queryKey: ['exam', examId] }),
+  });
+  const closeNow = useMutation({
+    mutationFn: (closesAt: string) =>
+      api('exams.updateSettings', { params: { examId }, body: { closesAt } }),
     onSuccess: () => client.invalidateQueries({ queryKey: ['exam', examId] }),
   });
 
@@ -120,12 +142,7 @@ export function ExamPage() {
         {detail.data.view?.tasks.map((task) => (
           <article key={task.id} className="rounded border p-4">
             <h2 className="text-xl font-medium">{task.title}</h2>
-            <MarkdownContent
-              source={taskInstructionsMarkdown(task, {
-                tips: t('exams.fields.tips'),
-                starterCode: t('exams.fields.starterCode'),
-              })}
-            />
+            <TaskTextContent task={task} />
           </article>
         ))}
         {!detail.data.view && <p>{t('exams.notVisibleYet')}</p>}
@@ -139,8 +156,9 @@ export function ExamPage() {
   const settingsChanged =
     draft !== null &&
     (settingsTitle !== professor.exam.title ||
-      opensAt !== professor.exam.opensAt.slice(0, 16) ||
-      closesAt !== (professor.exam.closesAt?.slice(0, 16) ?? '') ||
+      opensAt !== formatLjubljanaDateTime(professor.exam.opensAt) ||
+      closesAt !==
+        (professor.exam.closesAt ? formatLjubljanaDateTime(professor.exam.closesAt) : '') ||
       scale !== professor.settings.scale ||
       JSON.stringify(thresholds) !== JSON.stringify(professor.settings.thresholds) ||
       autocomplete !== professor.settings.autocomplete);
@@ -258,6 +276,7 @@ export function ExamPage() {
                   {t('exams.autocomplete')}
                 </label>
               </div>
+              <p className="text-sm text-muted-foreground">{t('exams.timeZone')}</p>
               <div className="grid grid-cols-5 gap-2">
                 {(['6', '7', '8', '9', '10'] as const).map((grade) => (
                   <label key={grade} className="space-y-1">
@@ -275,7 +294,16 @@ export function ExamPage() {
                 ))}
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" onClick={() => updateSettings.mutate()}>
+                <Button
+                  variant="outline"
+                  disabled={
+                    !settingsChanged ||
+                    !settingsTitle.trim() ||
+                    !opensAt ||
+                    (!professor.exam.practice && !closesAt)
+                  }
+                  onClick={() => updateSettings.mutate()}
+                >
                   {t('exams.saveSettings')}
                 </Button>
                 {(professor.exam.state === 'draft' ||
@@ -284,14 +312,9 @@ export function ExamPage() {
                   <Button
                     variant="outline"
                     onClick={() => {
-                      const closesNow = new Date();
-                      setClosesAt(closesNow.toISOString().slice(0, 16));
-                      api('exams.updateSettings', {
-                        params: { examId },
-                        body: { closesAt: closesNow.toISOString() },
-                      })
-                        .then(() => client.invalidateQueries({ queryKey: ['exam', examId] }))
-                        .catch(() => undefined);
+                      const instant = new Date().toISOString();
+                      setClosesAt(formatLjubljanaDateTime(instant));
+                      closeNow.mutate(instant);
                     }}
                   >
                     {t('exams.closeNow')}
@@ -301,6 +324,11 @@ export function ExamPage() {
               {updateSettings.isError && (
                 <p role="alert" className="text-destructive">
                   {t(errorKey(updateSettings.error))}
+                </p>
+              )}
+              {closeNow.isError && (
+                <p role="alert" className="text-destructive">
+                  {t(errorKey(closeNow.error))}
                 </p>
               )}
             </div>
@@ -431,18 +459,23 @@ export function ExamPage() {
                       <textarea
                         className="w-full min-h-32 max-h-64 resize-y overflow-y-auto rounded border px-3 py-2"
                         aria-label={t('exams.fields.instructions')}
-                        maxLength={LIMITS.taskInstructionsChars}
-                        value={taskInstructionsMarkdown(task, {
-                          tips: t('exams.fields.tips'),
-                          starterCode: t('exams.fields.starterCode'),
-                        })}
-                        onChange={(e) =>
-                          updateTask(taskIndex, {
-                            instructions: e.target.value,
-                            tips: '',
-                            starterCode: '',
-                          })
-                        }
+                        maxLength={10000}
+                        value={task.instructions}
+                        onChange={(e) => updateTask(taskIndex, { instructions: e.target.value })}
+                      />
+                      <textarea
+                        className="w-full min-h-24 max-h-64 resize-y overflow-y-auto rounded border px-3 py-2"
+                        aria-label={t('exams.fields.tips')}
+                        maxLength={10000}
+                        value={task.tips}
+                        onChange={(e) => updateTask(taskIndex, { tips: e.target.value })}
+                      />
+                      <textarea
+                        className="w-full min-h-24 max-h-64 resize-y overflow-y-auto rounded border px-3 py-2"
+                        aria-label={t('exams.fields.starterCode')}
+                        maxLength={LIMITS.codeBytes}
+                        value={task.starterCode}
+                        onChange={(e) => updateTask(taskIndex, { starterCode: e.target.value })}
                       />
                       <p className="text-sm text-muted-foreground">
                         {t('exams.markdownSupported')}
@@ -518,7 +551,7 @@ export function ExamPage() {
                               }
                             >
                               <option value="ai">AI</option>
-                              <option value="runs">Runs</option>
+                              <option value="runs">{t('exams.criterionKinds.runs')}</option>
                             </select>
                             <input
                               className="rounded border px-2 py-1"

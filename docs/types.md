@@ -116,7 +116,7 @@ type TestCase = {
 type Task = {
   id: Uuid;
   title: string;             // 1 to 200 characters
-  instructions: string;      // Markdown, at most LIMITS.taskInstructionsChars characters
+  instructions: string;      // Markdown, at most 10000 characters
   tips: string;              // Markdown, at most 10000 characters
   starterCode: string;       // at most LIMITS.codeBytes
   timeLimitMs: number;       // integer, LIMITS.timeLimitMs.min to .max

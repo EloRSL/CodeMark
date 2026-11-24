@@ -100,7 +100,11 @@ export function examRoutes(app: Hono<AppEnv>): void {
       .where(and(eq(examMembers.examId, examId!), eq(examMembers.role, 'student')))
       .orderBy(asc(examMembers.enrolmentNo));
 
-    const examRow = await db.select().from(exams).where(eq(exams.id, examId!)).get();
+    const examRow = await db
+      .select({ settings: exams.settings })
+      .from(exams)
+      .where(eq(exams.id, examId!))
+      .get();
     if (!examRow) throw new ApiError('NOT_FOUND', 'No such exam');
     const grades = grade({
       tasks: finalVersion.snapshot.tasks.map((task) => ({

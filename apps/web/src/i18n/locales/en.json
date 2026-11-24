@@ -50,6 +50,7 @@
     "percent": "Percent",
     "points": "Points",
     "autocomplete": "Editor autocomplete",
+    "timeZone": "Times are shown in Europe/Ljubljana.",
     "removeTask": "Remove task",
     "versions": "Versions",
     "versionNote": "Change note",
@@ -64,6 +65,9 @@
     "downloadCsv": "Download grades CSV",
     "hiddenTests": "Hidden tests",
     "publicTests": "Public tests",
+    "criterionKinds": {
+      "runs": "Runs"
+    },
     "markdownSupported": "Markdown formatting is supported.",
     "notVisibleYet": "The exam content isn't available yet.",
     "search": "Search by title",

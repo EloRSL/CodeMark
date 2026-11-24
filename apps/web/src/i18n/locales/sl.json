@@ -50,6 +50,7 @@
     "percent": "Odstotek",
     "points": "Točke",
     "autocomplete": "Samodopolnjevanje urejevalnika",
+    "timeZone": "Časi so prikazani v časovnem pasu Europe/Ljubljana.",
     "removeTask": "Odstrani nalogo",
     "versions": "Različice",
     "versionNote": "Opomba spremembe",
@@ -64,6 +65,9 @@
     "downloadCsv": "Prenesi CSV ocen",
     "hiddenTests": "Skriti preizkusi",
     "publicTests": "Javni preizkusi",
+    "criterionKinds": {
+      "runs": "Izvajanje testov"
+    },
     "markdownSupported": "Oblikovanje Markdown je podprto.",
     "notVisibleYet": "Vsebina izpita še ni na voljo.",
     "search": "Išči po naslovu",
