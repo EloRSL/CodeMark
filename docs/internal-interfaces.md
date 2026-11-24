@@ -353,7 +353,7 @@ function useExamStatus(examId: string, options?: { onNotice?: (notice: Notice) =
 
 1. First request without `since`; keep `latestNoticeId` as the cursor.
 2. Poll every `LIMITS.pollIntervalMs` while `document.visibilityState === 'visible'`; poll at once when the tab becomes visible again; pause while hidden.
-3. Call `onNotice` once per new notice, in order, and advance the cursor.
+3. Call `onNotice` once per new notice, in order, and advance the cursor to the newest notice received (not to `latestNoticeId`), so more than 50 new notices arrive over the next polls instead of being skipped. `onNotice` gets only the notices that arrive while its hook is mounted: a notice is a live event, not history. When several mounted hooks pass `onNotice` for the same exam, each of them gets every new notice once.
 4. `serverOffsetMs` = `Date.parse(serverTime)` minus the midpoint of the request's send and receive times.
 5. `refresh()` refetches the same query at once; a poll already running is reused, not doubled.
 

@@ -62,7 +62,7 @@
 
 ### M3, by 2026-12-18 (Core)
 
-13. `exams.join` and `members.update` (S2), with the join page.
+13. `exams.join` and `members.update` (S2), with the student home page at `/` (my exams and the join form) and the members page at `/exams/:examId/students`.
 14. Access tests for every endpoint: signed out, non-member, wrong role (S4, G15).
 15. Full demo seed per `demo-data.md`, generated from `packages/core/src/demo/` (S40).
 

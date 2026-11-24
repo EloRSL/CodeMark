@@ -122,7 +122,7 @@ These exist since milestone 1. Run them from the repository root; they work the 
 - [ ] It implements items from its role file and names their scope IDs (`S12`) and rule IDs.
 - [ ] Typecheck, lint, formatting, tests and the translation check pass.
 - [ ] Every new text is in both `sl.json` and `en.json`.
-- [ ] A changed `schema.ts` comes with its generated migration. Applied migrations are never edited.
+- [ ] A changed `schema.ts` comes with its generated migration. Applied migrations are never edited. If `main` gains a migration after you generated yours, delete your migration (its `.sql`, its snapshot and its journal entry), rebase on `main` and run `pnpm db:generate` again; never renumber or merge migrations by hand.
 - [ ] No contract changed unless Rok changed it first in `docs/types.md` or `docs/api.md`.
 - [ ] The tests your task lists exist and pass (G15).
 - [ ] The Gate 1 script still passes.
