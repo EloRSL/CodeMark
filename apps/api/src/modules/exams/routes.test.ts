@@ -82,6 +82,7 @@ describe('exams endpoints', () => {
       practice: false,
     });
     const summary = (await create.json()) as { id: string };
+    await db.update(exams).set({ joinCode: 'PRACTICE' }).where(eq(exams.id, summary.id));
     const taskId = crypto.randomUUID();
     const criterionId = crypto.randomUUID();
     const publicTestId = crypto.randomUUID();
@@ -126,9 +127,11 @@ describe('exams endpoints', () => {
     ).json()) as {
       draft: { tasks: { title: string }[] };
       finalVersionTasks: { id: string; title: string }[];
+      joinCode: string;
     };
     expect(professorGet.draft.tasks[0]?.title).toBe('Current draft title');
     expect(professorGet.finalVersionTasks).toEqual([{ id: taskId, title: 'Task' }]);
+    expect(professorGet.joinCode).toBe('PRACTICE');
 
     clock.set(T0 + 600000);
     await db
@@ -527,9 +530,9 @@ describe('exams endpoints', () => {
       ).status,
     ).toBe(200);
     const gradeChanged = await db.select().from(notices).where(eq(notices.examId, exam.id));
-    expect(gradeChanged).toContainEqual(
-      expect.objectContaining({ userId: student.me.id, kind: 'grade_changed' }),
-    );
+    expect(gradeChanged.filter((notice) => notice.kind === 'grade_changed')).toEqual([
+      expect.objectContaining({ userId: null, kind: 'grade_changed' }),
+    ]);
     expect(
       (
         await professor.request('PATCH', `/exams/${exam.id}/settings`, {
@@ -609,13 +612,31 @@ describe('exams endpoints', () => {
     const exam = (await create.json()) as { id: string };
     await db.update(exams).set({ phase: 'published', closedAt: null }).where(eq(exams.id, exam.id));
     clock.set(T0 + 61000);
-    const closed = await (
-      await import('../../app')
-    ).app.request(
-      '/api/test/run-jobs',
-      { method: 'POST', headers: { Origin: env.APP_ORIGIN } },
-      env,
-    );
+    const runJobs = () =>
+      import('../../app').then(({ app: workerApp }) =>
+        workerApp.request(
+          '/api/test/run-jobs',
+          { method: 'POST', headers: { Origin: env.APP_ORIGIN } },
+          env,
+        ),
+      );
+    const closed = await runJobs();
     expect(closed.status).toBe(200);
+    const firstRun = (await closed.json()) as { examsClosed: number };
+    expect(firstRun.examsClosed).toBeGreaterThan(0);
+    const stored = await db.select().from(exams).where(eq(exams.id, exam.id)).get();
+    expect(stored?.closedAt).toBe(T0 + 61000);
+    const closingNotices = await db.select().from(notices).where(eq(notices.examId, exam.id));
+    expect(closingNotices).toEqual([
+      expect.objectContaining({
+        examId: exam.id,
+        userId: professor.me.id,
+        kind: 'exam_closed',
+      }),
+    ]);
+    const secondRun = await runJobs();
+    expect(secondRun.status).toBe(200);
+    expect(await secondRun.json()).toMatchObject({ examsClosed: 0 });
+    expect(await db.select().from(notices).where(eq(notices.examId, exam.id))).toHaveLength(1);
   });
 });

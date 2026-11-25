@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { api, errorKey } from '@/lib/api';
 import { useMe } from '@/lib/me';
+import { formatLjubljanaDateTime, parseLjubljanaDateTime } from './dateTime';
 
 export function ExamsPage() {
   const { t, i18n } = useTranslation();
@@ -29,8 +30,8 @@ export function ExamsPage() {
       api('exams.create', {
         body: {
           title,
-          opensAt: new Date(opensAt).toISOString(),
-          closesAt: practice ? null : new Date(closesAt).toISOString(),
+          opensAt: parseLjubljanaDateTime(opensAt),
+          closesAt: practice ? null : parseLjubljanaDateTime(closesAt),
           practice,
         },
       }),
@@ -108,8 +109,19 @@ export function ExamsPage() {
               {t('exams.create')}
             </Button>
             {create.isError && (
-              <p role="alert" className="text-sm text-destructive">
+              <p
+                role="alert"
+                className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900"
+              >
                 {t(errorKey(create.error))}
+              </p>
+            )}
+            {create.isSuccess && (
+              <p
+                role="status"
+                className="rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"
+              >
+                {t('exams.createSuccess')}
               </p>
             )}
           </form>
@@ -179,7 +191,7 @@ export function ExamsPage() {
                   <span className="text-sm">{t(`exams.states.${exam.state}`)}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {new Date(exam.opensAt).toLocaleString()}
+                  {formatLjubljanaDateTime(exam.opensAt).replace('T', ' ')}
                 </div>
               </Link>
             ))}

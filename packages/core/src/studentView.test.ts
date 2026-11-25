@@ -43,6 +43,7 @@ describe('buildStudentView', () => {
     const view = buildStudentView(content);
     expect(view.tasks[0]!.publicTests).toHaveLength(1);
     expect(view.tasks[0]!.hiddenTestCount).toBe(1);
+    expect(JSON.stringify(view)).not.toContain('44444444-4444-4444-8444-444444444444');
     expect(JSON.stringify(view)).not.toContain('secret');
     expect(JSON.stringify(view)).not.toContain('answer');
   });

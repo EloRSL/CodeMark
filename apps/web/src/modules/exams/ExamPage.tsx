@@ -7,7 +7,7 @@ import type {
 } from '@codemark/contracts';
 import { LIMITS } from '@codemark/contracts';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Outlet, useMatch, useNavigate, useParams } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -62,9 +62,16 @@ export function ExamPage() {
   const [thresholds, setThresholds] = useState({ '6': 50, '7': 60, '8': 70, '9': 80, '10': 90 });
   const [autocomplete, setAutocomplete] = useState(true);
   const [timeUnit, setTimeUnit] = useState<'milliseconds' | 'seconds'>('milliseconds');
+  const initializedExamId = useRef<string | null>(null);
+  const savedDraftJson = useRef<string | null>(null);
+  const saveQueue = useRef<Promise<void>>(Promise.resolve());
+  const [savedDraftJsonForFeedback, setSavedDraftJsonForFeedback] = useState<string | null>(null);
 
   useEffect(() => {
-    if (detail.data?.role === 'professor') {
+    if (detail.data?.role === 'professor' && initializedExamId.current !== examId) {
+      initializedExamId.current = examId;
+      savedDraftJson.current = JSON.stringify(detail.data.draft);
+      setSavedDraftJsonForFeedback(savedDraftJson.current);
       setDraft(detail.data.draft);
       setActiveTaskId(detail.data.draft.tasks[0]?.id ?? null);
       setSettingsTitle(detail.data.exam.title);
@@ -76,12 +83,11 @@ export function ExamPage() {
       setThresholds(detail.data.settings.thresholds);
       setAutocomplete(detail.data.settings.autocomplete);
     }
-  }, [detail.data]);
+  }, [detail.data, examId]);
 
   const save = useMutation({
     mutationFn: (content: ExamContent) =>
       api('exams.saveDraft', { params: { examId }, body: content }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ['exam', examId] }),
   });
   const publish = useMutation({
     mutationFn: () => api('exams.publish', { params: { examId } }),
@@ -126,6 +132,29 @@ export function ExamPage() {
       api('exams.updateSettings', { params: { examId }, body: { closesAt } }),
     onSuccess: () => client.invalidateQueries({ queryKey: ['exam', examId] }),
   });
+  const persistDraft = useCallback(
+    (content: ExamContent) => {
+      const contentJson = JSON.stringify(content);
+      const operation = saveQueue.current.then(async () => {
+        if (savedDraftJson.current === contentJson) return;
+        await save.mutateAsync(content);
+        savedDraftJson.current = contentJson;
+        setSavedDraftJsonForFeedback(contentJson);
+      });
+      saveQueue.current = operation.catch(() => undefined);
+      return operation;
+    },
+    [save.mutateAsync],
+  );
+
+  useEffect(() => {
+    if (!draft || isPreviewRoute || initializedExamId.current !== examId) return;
+    if (JSON.stringify(draft) === savedDraftJson.current) return;
+    const timer = window.setTimeout(() => {
+      void persistDraft(draft).catch(() => undefined);
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [draft, examId, isPreviewRoute, persistDraft]);
 
   if (detail.isLoading) return <p>{t('common.loading')}</p>;
   if (detail.isError)
@@ -152,7 +181,6 @@ export function ExamPage() {
 
   const professor = detail.data;
   if (isPreviewRoute) return <Outlet context={draft} />;
-  const draftChanged = draft !== null && JSON.stringify(draft) !== JSON.stringify(professor.draft);
   const settingsChanged =
     draft !== null &&
     (settingsTitle !== professor.exam.title ||
@@ -162,11 +190,34 @@ export function ExamPage() {
       scale !== professor.settings.scale ||
       JSON.stringify(thresholds) !== JSON.stringify(professor.settings.thresholds) ||
       autocomplete !== professor.settings.autocomplete);
-  const hasUnsavedChanges = draftChanged || settingsChanged;
-
+  const draftChanged = draft !== null && JSON.stringify(draft) !== savedDraftJson.current;
   const goBack = () => {
-    if (hasUnsavedChanges && !window.confirm(t('exams.unsavedChangesConfirm'))) return;
+    if ((settingsChanged || draftChanged) && !window.confirm(t('exams.unsavedChangesConfirm')))
+      return;
+    if (draft) {
+      void persistDraft(draft).then(
+        () => navigate('/'),
+        () => undefined,
+      );
+      return;
+    }
     navigate('/');
+  };
+
+  const publishDraft = () => {
+    if (!draft) return;
+    void persistDraft(draft).then(
+      () => publish.mutate(),
+      () => undefined,
+    );
+  };
+
+  const publishVersion = () => {
+    if (!draft) return;
+    void persistDraft(draft).then(
+      () => version.mutate(),
+      () => undefined,
+    );
   };
 
   const updateTask = (index: number, patch: Partial<Task>) => {
@@ -221,14 +272,34 @@ export function ExamPage() {
           <h1 className="text-2xl font-semibold">{professor.exam.title}</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" disabled={!draft} onClick={() => navigate('preview')}>
+          <Button
+            variant="outline"
+            disabled={!draft}
+            onClick={() => {
+              if (!draft) return;
+              void persistDraft(draft).then(
+                () => navigate('preview'),
+                () => undefined,
+              );
+            }}
+          >
             {t('exams.preview')}
           </Button>
           {professor.exam.state === 'draft' && (
-            <Button onClick={() => publish.mutate()}>{t('exams.publish')}</Button>
+            <Button onClick={publishDraft} disabled={publish.isPending || save.isPending}>
+              {t('exams.publish')}
+            </Button>
           )}
         </div>
       </div>
+      {(publish.isError || version.isError || updateTaskAdjustment.isError) && (
+        <p
+          role="alert"
+          className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900"
+        >
+          {t(errorKey(publish.error ?? version.error ?? updateTaskAdjustment.error!))}
+        </p>
+      )}
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_16rem]">
         <div className="space-y-6">
           <details open className="rounded border p-4">
@@ -306,29 +377,50 @@ export function ExamPage() {
                 >
                   {t('exams.saveSettings')}
                 </Button>
-                {(professor.exam.state === 'draft' ||
-                  professor.exam.state === 'scheduled' ||
-                  professor.exam.state === 'open') && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const instant = new Date().toISOString();
-                      setClosesAt(formatLjubljanaDateTime(instant));
-                      closeNow.mutate(instant);
-                    }}
-                  >
-                    {t('exams.closeNow')}
-                  </Button>
-                )}
+                {(professor.exam.state === 'draft' || professor.exam.state === 'open') &&
+                  !professor.exam.practice && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const instant = new Date().toISOString();
+                        setClosesAt(formatLjubljanaDateTime(instant));
+                        closeNow.mutate(instant);
+                      }}
+                    >
+                      {t('exams.closeNow')}
+                    </Button>
+                  )}
               </div>
               {updateSettings.isError && (
-                <p role="alert" className="text-destructive">
+                <p
+                  role="alert"
+                  className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900"
+                >
                   {t(errorKey(updateSettings.error))}
                 </p>
               )}
+              {updateSettings.isSuccess && !settingsChanged && (
+                <p
+                  role="status"
+                  className="rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"
+                >
+                  {t('exams.settingsSaveSuccess')}
+                </p>
+              )}
               {closeNow.isError && (
-                <p role="alert" className="text-destructive">
+                <p
+                  role="alert"
+                  className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900"
+                >
                   {t(errorKey(closeNow.error))}
+                </p>
+              )}
+              {closeNow.isSuccess && (
+                <p
+                  role="status"
+                  className="rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"
+                >
+                  {t('exams.settingsSaveSuccess')}
                 </p>
               )}
             </div>
@@ -352,7 +444,11 @@ export function ExamPage() {
                       onChange={(e) => setNote(e.target.value)}
                       placeholder={t('exams.versionNote')}
                     />
-                    <Button variant="outline" onClick={() => version.mutate()}>
+                    <Button
+                      variant="outline"
+                      disabled={version.isPending || save.isPending}
+                      onClick={publishVersion}
+                    >
                       {t('exams.newVersion')}
                     </Button>
                   </div>
@@ -635,9 +731,30 @@ export function ExamPage() {
                     </section>
                   );
                 })}
-              <Button onClick={() => save.mutate(draft)} disabled={save.isPending}>
+              <Button
+                onClick={() => {
+                  void persistDraft(draft).catch(() => undefined);
+                }}
+                disabled={save.isPending}
+              >
                 {t('exams.saveDraft')}
               </Button>
+              {save.isError && (
+                <p
+                  role="alert"
+                  className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-900"
+                >
+                  {t(errorKey(save.error))}
+                </p>
+              )}
+              {save.isSuccess && JSON.stringify(draft) === savedDraftJsonForFeedback && (
+                <p
+                  role="status"
+                  className="rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"
+                >
+                  {t('exams.saveSuccess')}
+                </p>
+              )}
             </div>
           )}
         </div>

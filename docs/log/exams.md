@@ -21,12 +21,13 @@ What the exams code adds to the docs, and where it differs from them. Read it be
 
 ## Changed
 
-### Exam reads and settings
-- What: Student list/detail queries select only summary fields and, for details, autocomplete plus `student_view`; `getExam` returns the exact documented `ExamRecord`. Settings send changed fields and preserve Europe/Ljubljana wall time.
-- What: Join codes use `crypto.getRandomValues()` and are stored as `XXXX-XXXX`; the `runs` criterion label is translated.
-- Added: 2026-11-22, pull request #5
+### Save feedback and unsaved editor changes
+- Where: `apps/web/src/modules/exams/ExamsPage.tsx` and `ExamPage.tsx`.
+- What: Exam creation, draft saves, and settings saves show green success or red failure feedback. The editor Back action prompts when settings or exercise changes are unsaved; confirming saves the exercise draft and discards unsaved settings.
+- Added: 2026-11-25, pending review.
 
 ### CSV confirmed-score source
 - Docs: `exams.gradesCsv` reads confirmed scores through `review.getConfirmedScores`.
 - Code: The review module does not export that function yet, so CSV currently uses an empty confirmed-score list and reports zero totals.
+- Why: The review module is not implemented in this checkout, so the role's documented empty-list stand-in remains in use.
 - Added: 2026-11-22, pull request #5

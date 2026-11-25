@@ -31,10 +31,6 @@ export type ExamRecord = ExamTiming & {
 
 const JOIN_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-function formatJoinCode(code: string): string {
-  return code.length === 8 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
-}
-
 export function generateJoinCode(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(8));
   const code = [...bytes].map((byte) => JOIN_CHARS[byte % JOIN_CHARS.length]).join('');
@@ -256,7 +252,7 @@ export async function getExamDetail(
     return {
       role: 'professor',
       exam: examSummary,
-      joinCode: formatJoinCode(row.joinCode),
+      joinCode: row.joinCode,
       settings: row.settings,
       draft: row.draft,
       finalVersionTasks:
@@ -549,19 +545,9 @@ export async function adjustTask(
       }),
   ];
   if (state === 'released') {
-    const members = await db
-      .select({ userId: examMembers.userId })
-      .from(examMembers)
-      .where(and(eq(examMembers.examId, examId), eq(examMembers.role, 'student')));
-    for (const member of members) {
-      statements.push(
-        notifyQuery(
-          db,
-          { examId, userId: member.userId, kind: 'grade_changed', payload: { taskId } },
-          now,
-        ),
-      );
-    }
+    statements.push(
+      notifyQuery(db, { examId, userId: null, kind: 'grade_changed', payload: { taskId } }, now),
+    );
   }
   if (statements.length === 1) await db.batch([statements[0]!]);
   else await db.batch([statements[0]!, ...statements.slice(1)] as [BatchItem, ...BatchItem[]]);
