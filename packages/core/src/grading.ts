@@ -26,6 +26,8 @@ export function runsPoints(input: {
 }
 
 const EXCEPTION_NAME = /^[A-Za-z_][A-Za-z0-9_.]{0,99}$/;
+// a program can write a hidden input alone to stderr; only real exception names leave the Worker
+const EXCEPTION_ENDING = /(Error|Exception|Warning|Interrupt|Exit)$/;
 
 export function buildCheckSummary(results: StoredTestResult[]): CheckSummary {
   const summary = { passed: results.filter((r) => r.passed).length, total: results.length };
@@ -38,7 +40,7 @@ export function buildCheckSummary(results: StoredTestResult[]): CheckSummary {
   // only the name before ':' leaves the Worker; the message can repeat a hidden input
   const lastLine = failed.stderr.split(/\r?\n/).findLast((line) => line.trim() !== '') ?? '';
   const name = lastLine.split(':')[0] ?? '';
-  const errorType = EXCEPTION_NAME.test(name) ? name : null;
+  const errorType = EXCEPTION_NAME.test(name) && EXCEPTION_ENDING.test(name) ? name : null;
   return { ...summary, firstFailure: { kind: 'error', errorType } };
 }
 
