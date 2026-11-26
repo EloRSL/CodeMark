@@ -19,8 +19,8 @@
 
 | What | To | By |
 | --- | --- | --- |
-| The fake provider and `createAiProvider` | EloRSL (CI, Gate 1), bjaksic84 | M1 |
-| `runsPoints`, `buildCheckSummary`, `numberLines`, `checkGradingAnswer` | you, bjaksic84 | M1 |
+| The fake provider and `createAiProvider` | EloRSL (CI, Gate 1) | M1 |
+| `runsPoints`, `buildCheckSummary`, `numberLines`, `checkGradingAnswer` | you | M1 |
 | `gradeSubmissionJob` (with `onFailed`) | EloRSL (cron wiring) | M2 |
 | `grading.trial` | butarca (preview) | M4 |
 | `grading.aiStatus` and the panel | bjaksic84 (review screen) | M3 |
@@ -40,7 +40,7 @@
 
 1. Fake provider exactly as in `internal-interfaces.md` section 3.
 2. `grading.ts` with table tests; `checkGradingAnswer` against bad JSON, fenced JSON, missing and extra criteria, out-of-range and non-0.5 points, wrong quotes.
-3. Start the quality test: 20 to 30 samples (good, buggy, not compiling, a few with comments that try to instruct the grader) with reference scores from two team members.
+3. Start the quality test: 20 to 30 samples (good, buggy, not compiling, a few with comments that try to instruct the grader) with reference scores from two team members, in `apps/api/src/modules/grading/quality/`.
 
 ### M2, by 2026-12-06
 

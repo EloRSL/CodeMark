@@ -118,7 +118,7 @@ type AnswerCheck =
 ```
 
 - `runsPoints`: all tests pass (`total > 0 && passed === total`) gives `maxPoints`; else `passed >= 1` gives `floorToHalf(maxPoints * 2 / 3)`; else `smallTypo` gives `floorToHalf(maxPoints / 3)`; else `0`.
-- `buildCheckSummary`: `passed` = results with `passed`; `firstFailure` = the first result that didn't pass: `timeout` if `timedOut`, else `error` if `exitCode !== 0` (with `errorType` = the exception name at the start of the last non-empty line of `stderr`, the text before the first `:`, or `null` if it doesn't match the pattern in `types.md`; the rest of the line is never sent, because it can repeat a hidden input), else `wrong_output`. Null when none failed.
+- `buildCheckSummary`: `passed` = results with `passed`; `firstFailure` = the first result that didn't pass: `timeout` if `timedOut`, else `error` if `exitCode !== 0` (with `errorType` = the exception name at the start of the last non-empty line of `stderr`, the text before the first `:`, or `null` if it doesn't match the pattern in `types.md` or doesn't end in `Error`, `Exception`, `Warning`, `Interrupt` or `Exit`; the rest of the line is never sent, because it can repeat a hidden input, and the ending rule stops a program that writes a hidden input alone to `stderr` from sending it as the name, G14), else `wrong_output`. Null when none failed.
 - `numberLines`: normalize line endings to `\n`, then `"{n}: {line}"` per line, `n` from 1, joined with `\n`.
 - `checkGradingAnswer`, in order:
   1. Strip a Markdown code fence, take the text from the first `{` to the last `}`, `JSON.parse` it. Failure: `ok: false`.
@@ -278,7 +278,7 @@ function getConfirmedScores(db: Db, examId: string):
   Promise<{ studentId: string; taskId: string; criterionId: string; points: number }[]>;   // counted submissions only
 ```
 
-`suggest` writes every record and history row of the submission in **one** `db.batch()` (ADR-003, CAP-2), following the write rules in `data-model.md`. It never changes `points` or `state` of a confirmed record.
+`suggest` writes every record and history row of the submission in **one** `db.batch()` (ADR-003, CAP-2), following the write rules in `data-model.md`. It never changes `points` or `state` of a confirmed record. It checks every suggestion with `ScoreSuggestion` and throws before writing anything when one fails or a criterion appears twice; the caller keeps `points` within the criterion's `maxPoints`.
 
 ### grading [lukaazman]: `apps/api/src/modules/grading/index.ts`
 

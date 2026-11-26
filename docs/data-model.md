@@ -259,7 +259,7 @@ Unique `(submission_id, criterion_id)`. A record exists only for criteria of the
 
 Write rules (ADR-003):
 
-- `suggest` inserts a record as `suggested`, or replaces only `suggested_points`, `reason`, `quotes`, `source`, `flagged`, `ai_request_id`. On a `confirmed` record it also sets `new_suggestion = 1` and never touches `points` or `state`.
+- `suggest` inserts a record as `suggested`, or replaces only `suggested_points`, `reason`, `quotes`, `source`, `flagged`, `ai_request_id` and `updated_at`. On a `confirmed` record it also sets `new_suggestion = 1` and never touches `points` or `state`. A record whose six suggestion columns wouldn't change gets no write and no history row, so the same suggestion arriving again changes nothing, not even `new_suggestion`.
 - `confirm` sets `state = confirmed`, `points`, `comment`, `confirmed_by`, `confirmed_at`, clears `new_suggestion`, and sets `released_at` when the exam is released.
 - A record is **released** when `released_at` is not null. Students see only released records.
 
