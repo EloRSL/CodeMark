@@ -9,7 +9,7 @@ import { sha256Hex } from '@codemark/core';
 import { and, eq, gt } from 'drizzle-orm';
 import type { Context } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
-import type { Db } from '../../db/client';
+import type { BatchItem, Db } from '../../db/client';
 import type { AppEnv, SessionUser } from '../../http/context';
 import { ApiError } from '../../http/errors';
 import { examMembers, sessions, users } from './schema';
@@ -111,6 +111,10 @@ export async function getMembership(
     .where(and(eq(examMembers.examId, examId), eq(examMembers.userId, userId)))
     .get();
   return member ?? null;
+}
+
+export function addMemberQuery(db: Db, member: Membership): BatchItem {
+  return db.insert(examMembers).values(member);
 }
 
 export async function resolveScopeExamId(

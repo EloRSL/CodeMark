@@ -25,6 +25,92 @@
       "student": "študent"
     }
   },
+  "exams": {
+    "title": "Izpiti",
+    "back": "Nazaj",
+    "backToEditor": "Nazaj v urejevalnik",
+    "unsavedChangesConfirm": "Imate neshranjene spremembe. Želite zapustiti stran? Spremembe nalog bodo shranjene; neshranjene nastavitve bodo zavržene.",
+    "addExam": "Dodaj izpit",
+    "create": "Ustvari izpit",
+    "createSuccess": "Izpit je bil uspešno ustvarjen.",
+    "preview": "Predogled",
+    "publish": "Objavi",
+    "saveDraft": "Shrani osnutek",
+    "saveSuccess": "Osnutek je bil uspešno shranjen.",
+    "task": "Naloga",
+    "tasks": "Naloge izpita",
+    "defaultTaskTitle": "Naloga {{number}}",
+    "criteria": "Merila",
+    "tests": "Preizkusi",
+    "public": "Javni",
+    "hidden": "Skriti",
+    "addTest": "Dodaj preizkus",
+    "addTask": "Dodaj nalogo",
+    "settings": "Nastavitve",
+    "saveSettings": "Shrani nastavitve",
+    "settingsSaveSuccess": "Nastavitve so bile uspešno shranjene.",
+    "closeNow": "Zapri zdaj",
+    "percent": "Odstotek",
+    "points": "Točke",
+    "autocomplete": "Samodopolnjevanje urejevalnika",
+    "timeZone": "Časi so prikazani v časovnem pasu Europe/Ljubljana.",
+    "removeTask": "Odstrani nalogo",
+    "versions": "Različice",
+    "versionNote": "Opomba spremembe",
+    "newVersion": "Objavi novo različico",
+    "gradingStates": {
+      "counted": "Šteje normalno",
+      "bonusOnly": "Samo bonus točke",
+      "excluded": "Izključena iz ocenjevanja"
+    },
+    "restoreTask": "Vrni nalogo",
+    "removeForGrade": "Odstrani iz ocene",
+    "downloadCsv": "Prenesi CSV ocen",
+    "hiddenTests": "Skriti preizkusi",
+    "publicTests": "Javni preizkusi",
+    "criterionKinds": {
+      "runs": "Izvajanje testov"
+    },
+    "markdownSupported": "Oblikovanje Markdown je podprto.",
+    "notVisibleYet": "Vsebina izpita še ni na voljo.",
+    "search": "Išči po naslovu",
+    "sort": "Razvrsti",
+    "sortOptions": {
+      "openingNewest": "Čas začetka: najnovejši najprej",
+      "openingOldest": "Čas začetka: najstarejši najprej",
+      "titleAsc": "Naslov: A–Ž",
+      "titleDesc": "Naslov: Ž–A"
+    },
+    "pageSize": "Izpitov na stran",
+    "previousPage": "Prejšnja",
+    "nextPage": "Naslednja",
+    "pageIndicator": "Stran {{page}} od {{pages}}",
+    "showingExams": "Prikazanih {{shown}} od {{total}} izpitov",
+    "noExamsMatch": "Noben izpit ne ustreza iskanju.",
+    "fields": {
+      "title": "Naslov",
+      "opensAt": "Čas odpiranja",
+      "closesAt": "Čas zapiranja",
+      "practice": "Vaje",
+      "taskTitle": "Naslov naloge",
+      "instructions": "Navodila",
+      "tips": "Namigi",
+      "starterCode": "Začetna koda",
+      "solvingTime": "Čas reševanja",
+      "timeUnit": "Enota"
+    },
+    "timeUnits": {
+      "milliseconds": "Milisekunde",
+      "seconds": "Sekunde"
+    },
+    "states": {
+      "draft": "Osnutek",
+      "scheduled": "Načrtovan",
+      "open": "Odprt",
+      "closed": "Zaprt",
+      "released": "Objavljen"
+    }
+  },
   "errors": {
     "BAD_REQUEST": "Podatki niso veljavni.",
     "UNAUTHENTICATED": "Najprej se prijavite.",
