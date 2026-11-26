@@ -75,7 +75,7 @@ export type AiUsage = z.infer<typeof AiUsage>;
 
 export interface AiProvider {
   readonly name: string; // 'fake' or 'workers-ai'
-  /** Returns the model's raw text and its usage. Throws AiProviderError when the call fails. */
+  /** Returns the model's raw text and its usage. Throws when the call fails. */
   suggestScores(
     request: GradingRequest,
     previousError?: string,
