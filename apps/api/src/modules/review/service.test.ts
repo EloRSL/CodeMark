@@ -133,11 +133,18 @@ describe('suggest', () => {
   it('replaces only the suggestion of a suggested record, with the old and new points', async () => {
     await suggest(db, firstGrading, T);
     const before = await record(LOOP);
+    const quotes = [
+      { line: 2, text: 'for digit in str(abs(n)):' },
+      { line: 3, text: 'total += int(digit)' },
+    ];
     await suggest(
       db,
       input(
         [
-          { criterionId: LOOP, suggestion: { ...ai(2, 'Loops over the digits.'), flagged: true } },
+          {
+            criterionId: LOOP,
+            suggestion: { ...ai(2, 'Loops over the digits.'), quotes, flagged: true },
+          },
           { criterionId: RUNS, suggestion: null },
         ],
         id(902),
@@ -151,10 +158,16 @@ describe('suggest', () => {
       points: null,
       suggestedPoints: 2,
       reason: 'Loops over the digits.',
+      quotes,
       flagged: true,
       aiRequestId: id(902),
       updatedAt: T + 1000,
     });
+    // The update path stores the changed quotes as JSON text (DM-2).
+    const stored = await env.DB.prepare('SELECT quotes FROM score_records WHERE id = ?')
+      .bind(before.id)
+      .first<{ quotes: string }>();
+    expect(JSON.parse(stored!.quotes)).toEqual(quotes);
     expect(await record(RUNS)).toMatchObject({ suggestedPoints: null, source: null, quotes: null });
     expect(await record(NAMES)).toMatchObject({ aiRequestId: AI_REQUEST, updatedAt: T });
     expect((await historyOf(before.id)).at(-1)).toMatchObject({
