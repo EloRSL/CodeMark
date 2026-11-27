@@ -68,9 +68,9 @@ playwright/.cache/
 playwright/.auth/
 
 # ---------------------------------------------------------------
-# AI agent instructions (local only, see docs/conventions.md §10)
+# Personal AI agent files (local only, see docs/conventions.md §10)
+# AGENTS.md is committed: every AI agent reads it first.
 # ---------------------------------------------------------------
-AGENTS.md
 CLAUDE.md
 CLAUDE.local.md
 .claude/

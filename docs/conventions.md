@@ -8,11 +8,11 @@ How the team builds CodeMark, the AI-Assisted Programming Exam Platform: how to 
 - Every rule has an ID, such as `G4` or `SEC-2`. Pull request descriptions name the IDs they implement or rely on.
 - Terms have one meaning each, defined in `glossary.md`. Use the exact term and never a synonym: write "hidden-test check", never "re-run" or "verification".
 - There are no diagrams. Every flow is written out as numbered steps in `flows.md`.
-- If the docs don't say how to do something a task needs, stop. Don't invent an endpoint, a field, a table, a column, an error code, a job type, a notice kind or a library. Ask Rok, and leave that part undone until he answers. Anything else that is new or different inside your own module goes into your role log (G20).
+- If the docs don't say how to do something a task needs, stop. Don't invent an endpoint, a field, a table, a column, an error code, a job type, a notice kind or a library. Ask Rok, and leave that part undone until Rok answers. Anything else that is new or different inside your own module goes into your role log (G20).
 
 ## 2. Who decides
 
-Rok is the PM and architect. He makes every scope and technical decision, and only he changes a contract, an ADR or these docs. The one exception is each role's own role log in `docs/log/` (G20). Anyone MAY suggest a change to Rok. Nothing changes because the team agrees to it.
+Rok is the PM and architect. He makes every scope and technical decision, and only he changes a contract, an ADR or these docs. The one exception: each role changes its own role log in `docs/log/` (G20). Anyone MAY suggest a change to Rok, but nothing changes just because the team agrees to it.
 
 ## 3. When two documents disagree
 
@@ -23,7 +23,7 @@ Follow this order and report the conflict to Rok:
 3. `docs/types.md` and `docs/api.md`
 4. everything else
 
-A role log (`docs/log/`) is merged only after Rok's review, so it describes that module's code as it is now. When a role log and another doc disagree about that module's own code, follow the role log and report it, so Rok can move it into the main docs. A role log never overrides a contract (G2).
+A role log (`docs/log/`) is merged only after Rok's review, so it describes its module's code as it is now. When a role log and another doc disagree about that module's own code, follow the role log and report the difference, so Rok can move the entry into the main docs. A role log never overrides a contract (G2).
 
 ## 4. Team and roles
 
@@ -31,12 +31,12 @@ A role log (`docs/log/`) is merged only after Rok's review, so it describes that
 | --- | --- | --- | --- |
 | `EloRSL` (Rok, lead) | Foundation, accounts, jobs, notices, translations, deployment | `roles/foundation.md` | ADR-001, ADR-005 |
 | `butarca` | Exam builder, exam lifecycle, grades, CSV | `roles/exams.md` | ADR-002, ADR-003 |
-| `timursic2` | Student exam page, editor, code runner | `roles/student-page.md` | ADR-004 |
-| `tzuntar` | Submissions, late work, hidden-test check (security lead) | `roles/submissions.md` | ADR-002, ADR-004 |
-| `lukaazman` | AI grading | `roles/grading.md` | ADR-006, ADR-003 |
-| `bjaksic84` | Review screen, release, results page | `roles/review.md` | ADR-003 |
+| `timursic2` | Student exam page, editor, code runner | `roles/student-page.md` | ADR-004, ADR-002 |
+| `tzuntar` | Submissions, late work, hidden-test check (security lead) | `roles/submissions.md` | ADR-004, ADR-002, ADR-006 |
+| `lukaazman` | AI grading | `roles/grading.md` | ADR-006, ADR-003, ADR-005 |
+| `bjaksic84` | Review screen, release, results page | `roles/review.md` | ADR-003, ADR-002 |
 
-Every role also reads `glossary.md`, `types.md`, and the sections of `api.md` and `internal-interfaces.md` its role file points to. The docs name people by their GitHub name. `.github/CODEOWNERS` uses the same names.
+Every role also reads `glossary.md`, `types.md`, and the sections of `api.md` and `internal-interfaces.md` that its role file points to. The docs name people by their GitHub name, and `.github/CODEOWNERS` uses the same names.
 
 ## 5. Global rules
 
@@ -47,10 +47,10 @@ These apply to every change, in every module.
 | G1 | TypeScript in strict mode everywhere. Exported functions and types MUST NOT use `any`. |
 | G2 | Every request body, response, job payload, notice payload, runner message and AI message MUST use the types in `packages/contracts`, which match `docs/types.md` exactly. MUST NOT define these shapes anywhere else. MUST NOT change a contract to make your code work: stop and tell Rok. |
 | G3 | A module writes only its own tables (see `docs/data-model.md`). Other modules use its public functions from its `index.ts`. A query MAY read another module's table in a join by importing the table from `apps/api/src/db/schema.ts`. MUST NOT write another module's table. |
-| G4 | Only `stateOf` and `isOnTime` in `packages/core` decide an exam's state or whether a submission is on time. No other code compares the current time with exam times to decide those things. Comparing two given times (for example `closesAt` after `opensAt` in a schema) and the time checks written into the docs (session expiry, a job's `run_after`, storing a past closing time as now in `exams.updateSettings`) are allowed. API code MUST take the current time from the request context (`c.get('now')`) or the job context (`ctx.now`), never from `Date.now()` or `new Date()`, so tests can move the clock. ESLint enforces this in `apps/api/src`: `Date.now()`, `Date()` and `new Date()` without arguments are errors outside `clock.ts` and test files. `new Date(ms)` to format a stored time stays allowed. |
+| G4 | Only `stateOf` and `isOnTime` in `packages/core` decide an exam's state or whether a submission is on time. No other code compares the current time with exam times to decide those things. Comparing two given times (for example `closesAt` after `opensAt` in a schema) and the time checks written into the docs (session expiry, a job's `run_after`, storing a past closing time as now in `exams.updateSettings`, and the query in `closeDueExams` that finds exams due to close with the same rule as `stateOf`) are allowed. API code MUST take the current time from the request context (`c.get('now')`) or the job context (`ctx.now`), never from `Date.now()` or `new Date()`, so tests can move the clock. ESLint enforces this in `apps/api/src`: `Date.now()`, `Date()` and `new Date()` without arguments are errors outside `clock.ts` and test files. `new Date(ms)` to format a stored time stays allowed. |
 | G5 | Times are stored as UTC milliseconds (integers), sent as ISO 8601 UTC strings, and shown in the Europe/Ljubljana time zone. |
 | G6 | IDs are UUIDs from `crypto.randomUUID()`. |
-| G7 | MUST NOT send a hidden test's input or expected output to a student. A public test's expected output does go to the student, because the browser compares **Run public tests** (ADR-004). MUST NOT send any expected output to the runner or the AI. Every endpoint has a test that checks this (`SEC-1`). |
+| G7 | MUST NOT send a hidden test's input or expected output to a student. A public test's expected output does go to the student, because the browser itself compares the results of **Run public tests** (ADR-004). MUST NOT send any expected output to the runner or the AI. Every endpoint has a test that checks this (`SEC-1`). |
 | G8 | Every route takes its access rule and scope from the endpoint registry in `packages/contracts`. A non-member gets `404 NOT_FOUND`, a member with the wrong role `403 FORBIDDEN`, and a signed-out caller `401 UNAUTHENTICATED`. |
 | G9 | Every text a user sees comes from `apps/web/src/i18n/locales/sl.json` and `en.json`, which have the same keys. The API returns error codes, never user-facing text, and the app shows the translation stored under `errors.<CODE>`. |
 | G10 | Errors MUST have the shape `{ "error": { "code": "<ErrorCode>", "message": "<English, for developers>" } }`, using only codes from `ErrorCode` in `docs/types.md`. |
@@ -59,17 +59,18 @@ These apply to every change, in every module.
 | G13 | Student code runs only inside the runner site (`apps/runner`). MUST NOT run or `eval` student code in the app page or the Worker. |
 | G14 | The AI is called only through the `AiProvider` interface. A `GradingRequest` MUST NOT contain a name, an email, an enrolment number, a user ID, a test input or an expected output. Local work and CI use the AI fake; the only exception is tzuntar's quality-test runs (ADR-006). |
 | G15 | Each endpoint has tests for: the normal case, each error code it can return, a signed-out caller, a non-member and a member with the wrong role. Tests use the fake clock and the AI fake. |
-| G16 | MUST NOT add a runtime dependency (code that ships to the browser, the Worker or the runner site) that isn't in the stack table in `docs/architecture.md` without Rok's approval. Dev-only tools that serve the stack (`@types/*`, `typescript-eslint`, ESLint and Prettier plugins, test helpers, a script runner for `pnpm dev`) MAY be added as dev dependencies; list them in the pull request. |
-| G17 | Secrets go only in `.dev.vars` (local, never committed), Cloudflare secrets (the deployed Worker) and the GitHub environment `production` (the deploy workflow's Cloudflare credentials, section 12). MUST NOT commit a secret or a real student's data. MUST NOT put either in a GitHub repository variable, an issue or a pull request: the repository is public, and its Actions logs show every repository variable. |
+| G16 | MUST NOT add a runtime dependency (code that ships to the browser, the Worker or the runner site) that isn't in the stack table (`docs/architecture.md` section 2) without Rok's approval. Dev-only tools that serve the stack (`@types/*`, `typescript-eslint`, ESLint and Prettier plugins, test helpers, a script runner for `pnpm dev`) MAY be added as dev dependencies; list them in the pull request. |
+| G17 | Secrets go only in `.dev.vars` (local, never committed), Cloudflare secrets (the deployed Worker) and the GitHub environment `production` (for the deploy workflow's Cloudflare credentials, section 12). MUST NOT commit a secret or a real student's data. MUST NOT put either in a GitHub repository variable, an issue or a pull request: the repository is public, and its Actions logs show every repository variable. |
 | G18 | Change only files your role owns (see `.github/CODEOWNERS` and your role file). Your role log in `docs/log/` counts as yours (G20). To change another role's files, open a pull request that their owner reviews. |
-| G19 | Commits look like a person wrote them. MUST NOT spam commits: one commit per finished, working step, usually 1 to 5 per pull request, and a fix to your own unpushed commit is amended into it instead of added as a new one. Titles are short, plain sentences in the imperative, at most 60 characters, with no prefix (`feat:`, `fix(api):`, `chore:`), no tags in brackets, no emoji and no full stop at the end. A description is optional: only when the title isn't enough, one to three plain sentences on what changed and why, with no headings, no list of every file and no "This commit...". Pull request titles follow the same rule, because a squash merge turns them into the commit on `main`. That commit's description is one line naming the activity, the milestone and the scope IDs, like `A22 (M3): S12, S13`; Rok adds it when merging. Good: `Add the submit endpoint`, `Fix the countdown after a tab switch`. Bad: `feat(submissions): implement submission endpoint with retry key support`. |
+| G19 | Commits look like a person wrote them. MUST NOT spam commits: one commit per finished, working step, usually 1 to 5 per pull request, and a fix to your own unpushed commit is amended into it instead of added as a new one. Titles are short, plain sentences in the imperative, at most 60 characters, with no prefix (`feat:`, `fix(api):`, `chore:`), no tags in brackets, no emoji and no full stop at the end. A description is optional: only when the title isn't enough, one to three plain sentences on what changed and why, with no headings, no list of every file and no "This commit...". Pull request titles follow the same rule, but start with their activity and ` - `, like `A22 - Add the submit endpoint`; that prefix is the only one allowed. A squash merge turns the pull request's title and description into the commit on `main` (section 12), so `main`'s history shows the activity and what each pull request did. Good commit titles: `Add the submit endpoint`, `Fix the countdown after a tab switch`. Good pull request title: `A22 - Add the submit endpoint`. Bad: `feat(submissions): implement submission endpoint with retry key support`. |
 | G20 | Every pull request that adds something other code or people can use, or makes the code differ from a doc, MUST record it in the author's role log (`docs/log/`) in the same pull request (section 11). Before using another module's functions, hooks or components, read that module's role log. |
 
 ## 6. Repository layout
 
 ```text
 CodeMark/
-  AGENTS.md, CLAUDE.md     local AI agent instructions; not in git (section 10)
+  AGENTS.md                instructions every AI agent reads before a task (section 10)
+  CLAUDE.md                local, not in git: points Claude Code to AGENTS.md (section 10)
   apps/
     web/                   React app (Vite); src/modules/<module>/ for each area
     api/                   Cloudflare Worker (Hono); src/modules/<module>/ for each area:
@@ -100,26 +101,26 @@ Every workspace package is named `@codemark/<folder>` (for example `@codemark/co
 
 ## 7. Commands
 
-These exist since milestone 1. Run them from the repository root; they work the same in PowerShell on Windows and in bash (CI).
+These commands exist since M1. Run them from the repository root. They work the same in PowerShell on Windows and in bash (CI).
 
 | Command | What it does |
 | --- | --- |
-| `pnpm install` | install everything |
-| `pnpm dev` | app on :5173, API on :8787, runner site on :5174, with a local database; creates an empty `apps/web/dist` when it's missing, because the Worker's static assets point there |
-| `pnpm db:reset` | fresh local database with the demo data (`docs/demo-data.md`); stop `pnpm dev` first |
-| `pnpm db:generate` | a new migration after you change a `schema.ts` |
-| `pnpm cron` | one local cron run: closes due exams, then runs one due job (`LIMITS.jobsPerCronRun`); needs `pnpm dev` running |
-| `pnpm test` | unit tests and API tests (in the Workers runtime) |
-| `pnpm e2e` | Playwright, including the Gate 1 script. Until the Gate 1 script lands (M2) there are no tests and it passes empty. Install Chromium once with `pnpm --filter @codemark/e2e exec playwright install chromium` |
-| `pnpm build` | builds the app, then the runner site and a dry run of the Worker deploy; CI and the deploy run it |
-| `pnpm typecheck`, `pnpm lint`, `pnpm format:check` | what CI checks |
+| `pnpm install` | installs every dependency |
+| `pnpm dev` | starts the app on :5173, the API on :8787 and the runner site on :5174, with a local database. It creates an empty `apps/web/dist` when it's missing, because the Worker's static assets point there |
+| `pnpm db:reset` | creates a fresh local database with the demo data (`docs/demo-data.md`); stop `pnpm dev` first |
+| `pnpm db:generate` | generates a new migration after you change a `schema.ts` |
+| `pnpm cron` | triggers one local cron run: it closes due exams, then runs one due job (`LIMITS.jobsPerCronRun`); needs `pnpm dev` running |
+| `pnpm test` | runs the unit tests and the API tests (in the Workers runtime) |
+| `pnpm e2e` | runs Playwright, including the Gate 1 script. Until the Gate 1 script lands (M2), there are no tests and the command passes with nothing to run. Install Chromium once with `pnpm --filter @codemark/e2e exec playwright install chromium` |
+| `pnpm build` | builds the app, then the runner site, then does a dry run of the Worker deploy; CI and the deploy run it |
+| `pnpm typecheck`, `pnpm lint`, `pnpm format:check` | the type, lint and formatting checks that CI runs |
 | `pnpm format` | fixes formatting with Prettier |
 | `pnpm check:i18n` | fails if `sl.json` and `en.json` have different keys |
-| `npx --yes shadcn@4.23.0 add <component>` | adds a shadcn/ui component, run inside `apps/web` (`pnpm dlx shadcn` fails in this workspace) |
+| `npx --yes shadcn@4.23.0 add <component>` | adds a shadcn/ui component; run it inside `apps/web` (`pnpm dlx shadcn` fails in this workspace) |
 
 ## 8. Definition of done for every pull request
 
-- [ ] It implements items from its role file and names their activity and milestone (`A22 (M3)`, `docs/scope.md`), their scope IDs (`S12`) and rule IDs.
+- [ ] It implements items from its role file. Its title starts with their activity (`A22 - `, `docs/scope.md`), and its description names the milestone (`M3`), the scope IDs (`S12`) and the rule IDs.
 - [ ] Typecheck, lint, formatting, tests and the translation check pass.
 - [ ] Every new text is in both `sl.json` and `en.json`.
 - [ ] A changed `schema.ts` comes with its generated migration. Applied migrations are never edited. If `main` gains a migration after you generated yours, delete your migration (its `.sql`, its snapshot and its journal entry), rebase on `main` and run `pnpm db:generate` again; never renumber or merge migrations by hand.
@@ -135,7 +136,7 @@ These exist since milestone 1. Run them from the repository root; they work the 
 | File | Answers |
 | --- | --- |
 | `docs/glossary.md` | what each term means |
-| `docs/scope.md` | what Part 1 includes (S1 to S43, Core items marked), what it excludes, the milestones with their activities and deliverables, and when Part 2 is planned |
+| `docs/scope.md` | what Part 1 includes (S1 to S43, Core items marked), what it excludes, the milestones with their activities, and when Part 2 is planned |
 | `docs/architecture.md` | the stack, decisions D1 to D28, limits, security rules, environments, the deployment, failure handling |
 | `docs/data-model.md` | every table, column, constraint and owner |
 | `docs/types.md` | every shared type: exam content, API bodies and responses, errors, jobs, notices, runner, AI |
@@ -143,7 +144,7 @@ These exist since milestone 1. Run them from the repository root; they work the 
 | `docs/internal-interfaces.md` | the functions modules call on each other, job and notice rules, the runner protocol, the AI interface, the cron |
 | `docs/flows.md` | the exam lifecycle and every main flow as numbered steps |
 | `docs/adr/` | the six architecture decisions and the rules that follow from them |
-| `docs/conventions.md` | how to read the docs, who decides, the team, global rules, layout, commands, definition of done, access, first-time setup, pull requests and merging |
+| `docs/conventions.md` | how to read the docs, who decides, the team, global rules, layout, commands, definition of done, what is not in git, role logs, access, first-time setup, pull requests, merging and the current state |
 | `docs/roles/` | each role's tasks, inputs, outputs, stand-ins, tests and definition of done (section 4) |
 | `docs/gate1.md` | the Gate 1 script step by step, with expected results |
 | `docs/demo-data.md` | the demo accounts, exams and submissions the seed creates |
@@ -151,21 +152,20 @@ These exist since milestone 1. Run them from the repository root; they work the 
 
 ## 10. What is not in git
 
-AI agent instructions stay on each person's computer and are listed in `.gitignore`:
+Personal AI agent files stay on each person's computer and are listed in `.gitignore`:
 
 ```gitignore
-# AI agent instructions (local only)
-AGENTS.md
+# Personal AI agent files (local only)
 CLAUDE.md
 CLAUDE.local.md
 .claude/
 ```
 
-Everything in `docs/` is planning and system design and is committed. Rok sends the current `AGENTS.md` and `CLAUDE.md` to the team; each person copies them into the root of their clone. They hold no rules of their own: every rule is in `docs/`, so a change to the rules is a normal commit.
+Everything in `docs/` is planning and system design, and it is committed. So is `AGENTS.md` in the repository root, the instructions for AI agents: if you work with an AI agent, it MUST read `AGENTS.md` before it starts any task. Only Rok changes `AGENTS.md`, as with the docs. `CLAUDE.md` stays local: it only points Claude Code to `AGENTS.md`, and Rok sends it to the team. These two files hold no rules of their own: every rule is in `docs/`, so a change to the rules is a normal commit.
 
 ## 11. Role logs (G20)
 
-Each role has one role log in `docs/log/`, named like its role file: `foundation.md`, `exams.md`, `student-page.md`, `submissions.md`, `grading.md`, `review.md`. It tells the other roles and their agents what the code adds to the docs and where it differs from them. You edit only your own role log; this is the one file in `docs/` you MAY change. Rok reviews every change to `docs/` (CODEOWNERS), so a merged entry is approved. From time to time Rok moves entries into the main docs and deletes them from the log.
+Each role has one role log in `docs/log/`, named like its role file: `foundation.md`, `exams.md`, `student-page.md`, `submissions.md`, `grading.md`, `review.md`. It tells the other roles and their agents what the role's code adds to the docs and where the code differs from them. You edit only your own role log; it is the one file in `docs/` you MAY change. Rok reviews every change to `docs/` (CODEOWNERS), so a merged entry is approved. From time to time, Rok moves entries into the main docs and deletes them from the log.
 
 **What needs an entry**
 
@@ -178,7 +178,7 @@ An entry never replaces Rok's approval for what section 1 and G2 reserve to him:
 
 **Format**
 
-Newest entry first in its section, one entry per item, at most five lines. The entry below only shows the format; it is not a real entry.
+Newest entry first in its section, one entry per item, at most five lines per entry. The entries below only show the format; they are not real entries.
 
 ```markdown
 ## Added
@@ -208,36 +208,37 @@ Newest entry first in its section, one entry per item, at most five lines. The e
 
 1. Install Node 22 or newer (CI uses 26) and pnpm 10.34.9 with `npm install -g pnpm@10.34.9`. The root `package.json` pins this pnpm version.
 2. Accept the GitHub invitation (from the email, or at `https://github.com/EloRSL/CodeMark/invitations`), then clone with `git clone https://github.com/EloRSL/CodeMark.git`.
-3. Copy `AGENTS.md` and `CLAUDE.md` from Rok into the root of the clone (section 10).
+3. `AGENTS.md` comes with the clone; any AI agent you use MUST read it before it starts a task. If you use Claude Code, also copy `CLAUDE.md` from Rok into the root of the clone (section 10).
 4. Run `pnpm install`, `pnpm db:reset` and `pnpm dev`, then open `http://localhost:5173`. The sign-in page has a button for each demo account.
 5. You need no `wrangler login`, no Cloudflare account and no `.dev.vars`: local work uses a local database and the AI fake. Nothing goes in `.dev.vars` before OAuth (M2).
 6. Run `pnpm db:reset` again after you pull a new migration (`apps/api/drizzle/`) or a change to the seed (`apps/api/seed/`).
 
 ### Branches and pull requests
 
-1. Start every task from an up-to-date `main` (`git switch main`, then `git pull`), on a short branch named `<github-name>/<topic>` (D19), for example `timursic2/runner-timeouts`.
-2. Push the branch and open a pull request into `main`. Its title follows G19, and its description names the activity, the milestone, and the scope and rule IDs (section 8).
+1. Start every feature from an up-to-date `main` (`git switch main`, then `git pull`) on a new branch named after its activity and the feature: the activity, a hyphen and a few lowercase words joined by hyphens (D19), for example `A22-runner-timeouts`. Git doesn't allow spaces in branch names. One branch and one pull request per feature (one task, or a few small tasks of your role file), never one branch for a whole activity: an activity spans several people and weeks, and its branch could only be reviewed at the end. The activity of a task is in `docs/scope.md`. A fix uses the activity of the feature it fixes; work that belongs to no feature, such as docs, CI or tooling, uses A0.
+2. Push the branch and open a pull request into `main`. Its title is the activity, ` - ` and a G19 title, for example `A22 - Add runner timeouts`, at most 60 characters in all. Its description starts with the milestone and the scope and rule IDs, like `M3: S12, S13, SEC-1`, then one to three plain sentences on what the feature adds or changes, and ends with the role log line (section 8).
 3. CI (`.github/workflows/ci.yml`, job `check`) runs on every pull request and on every push to it: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm check:i18n`, `pnpm test`, `pnpm build`, then Chromium for Playwright and `pnpm e2e`. It takes about a minute and a half. A pull request can't be merged until `check` passes.
-4. CODEOWNERS asks the owners of the files you changed for a review automatically. GitHub requires no approval, but a change named in section 8 still needs tzuntar's review before it's merged. A review is done within one working day. If the author and the reviewer don't agree within a day, Rok decides.
+4. CODEOWNERS automatically asks the owners of the files you changed for a review. GitHub requires no approval, but a change named in the last item of section 8 (access rules, sessions, secrets, the hidden-test check or the runner site) still needs tzuntar's review before it's merged. A review is done within one working day. If the author and the reviewer don't agree within a day, Rok decides.
 5. Rok merges every pull request. He is the final gate.
 
-A ruleset protects `main`: nobody can push to it directly, force-push or delete it, and the only way in is a pull request merged with a squash. The squash makes the pull request one commit on `main`, titled with the pull request title and described by the one line from G19; the separate commits on your branch don't reach `main`. After the merge GitHub deletes the branch. Don't push to it again, because that re-creates it; start the next task on a new branch from `main`.
+A ruleset protects `main`: nobody can push to it directly, force-push it or delete it. The only way in is a pull request merged with a squash. The squash makes the pull request one commit on `main`, with the pull request's title and description (GitHub adds ` (#<number>)` to the title); the separate commits on your branch don't reach `main`. So `main` has exactly one commit per pull request. Several features of one activity each get their own pull request and their own commit, like `A22 - Add runner timeouts (#21)` and `A22 - Add the settings page (#24)`; the title and the number tell them apart. A fix to a feature that is already on `main` is a new small pull request with the same activity, like `A22 - Fix the timeout after a page reload (#30)`, so the history shows the fix on its own. After the merge, GitHub deletes the branch. Don't push to it again, because that re-creates it; start the next task on a new branch from `main`.
 
 ### What a merge does
 
-Every merge to `main` deploys (`.github/workflows/deploy.yml`, `architecture.md` section 5). About a minute later the change is live at `https://codemark.elorsl.workers.dev`, which is also the demo (D24). One deploy runs at a time; a second merge waits for the first. A failed deploy shows red in the Actions tab, and the version before it stays live.
-
-### The weekly meeting
-
-Once a week the team meets briefly. Everyone shows what they merged since the last meeting, and the team goes through the milestones and the risks. Pull requests that waited more than a day for a review come up here. When a member misses the agreed work two weeks in a row, Rok goes through the reason with them and hands their tasks on the critical path to others.
+Every merge to `main` deploys (`.github/workflows/deploy.yml`, `architecture.md` section 5). About a minute later the change is live at `https://codemark.elorsl.workers.dev`, which is also the demo (D24). One deploy runs at a time; the deploy of a second merge waits until the first one finishes. A failed deploy shows red in the Actions tab, and the version before it stays live.
 
 ### State on 2026-11-27
 
-- Merged and deployed: every M1 task of `roles/foundation.md` (pull requests #1 and #2, then `exams.status`, `listStudentMembers`, `getUserNames` and the limits test), butarca's exam builder (pull request #5: endpoints #11 to #19, `stateOf`, `isOnTime`, `grade()`, `buildStudentView`, `closeDueExams`, `releaseQuery`, the professor's exam list and the editor) and lukaazman's M1 grading work (pull request #8: `runsPoints`, `buildCheckSummary`, `numberLines`, `checkGradingAnswer` and the AI fake behind `createAiProvider`, which nothing calls until the real `gradeSubmissionJob`; pull request #10: the `errorType` ending rule, a stand-in `gradeSubmissionJob`, and the 30 quality-test samples with rater A's scores; pull request #12: rater B's scores and the agreed reference scores) and bjaksic84's score records (pull request #7: the `score_records` and `score_history` tables and `review.suggest`; `getConfirmedScores` and `scoreRecordExamId` are stand-ins until his M2). On the deployment, demo sign-in, `me.get`, `me.update` (with the language switch), `auth.logout`, `exams.status` and the nine exam endpoints work. The other 19 endpoints answer `501 NOT_IMPLEMENTED` until their owners build them, and the test endpoints answer `404`, as they must outside `APP_ENV=test`.
-- The deployment's database has migrations `0000` to `0002` (the exam tables, then the score tables). It holds the four demo accounts and no exams; the full demo seed is foundation task 15 (M3).
+- Merged and deployed:
+  - EloRSL: every M1 task of `roles/foundation.md` (pull requests #1 and #2, then `exams.status`, `listStudentMembers`, `getUserNames` and the limits test).
+  - butarca: the exam builder (pull request #5: endpoints #11 to #19, `stateOf`, `isOnTime`, `grade()`, `buildStudentView`, `closeDueExams`, `releaseQuery`, the professor's exam list and the editor).
+  - lukaazman: the M1 grading work. Pull request #8: `runsPoints`, `buildCheckSummary`, `numberLines`, `checkGradingAnswer`, and the AI fake behind `createAiProvider`, which nothing calls until the real `gradeSubmissionJob` exists. Pull request #10: the `errorType` ending rule, a stand-in `gradeSubmissionJob`, and the 30 quality-test samples with rater A's scores. Pull request #12: rater B's scores and the agreed reference scores.
+  - bjaksic84: the score records (pull request #7: the `score_records` and `score_history` tables and `review.suggest`). `getConfirmedScores` and `scoreRecordExamId` are stand-ins until bjaksic84's M2.
+- On the deployment, these work: demo sign-in, `me.get`, `me.update` (with the language switch), `auth.logout`, `exams.status` and the nine exam endpoints. The other 19 endpoints answer `501 NOT_IMPLEMENTED` until their owners build them. The test endpoints answer `404`, as they must outside `APP_ENV=test`.
+- The deployment's database has migrations `0000` to `0002` (`0001` adds the exam tables, `0002` the score tables). It holds the four demo accounts and no exams. The full demo seed is foundation task 15 (M3).
 - Every teammate has accepted the GitHub invitation and has write access. Rok and tzuntar are the Cloudflare administrators.
 - No pull request is open. Nothing from tzuntar (submissions) or timursic2 (student page) is in `main` yet.
-- The cron closes due exams with butarca's `closeDueExams` and runs one `grade.submission` job per run (`LIMITS.jobsPerCronRun`, lowered from 2 by the limits test) with lukaazman's `gradeSubmissionJob`. Until grading M2 task 4 that handler is a stand-in that marks each job done without grading, and a done job never runs again (its dedupe key stays taken), so a hidden-test check run on the deployment before then leaves its submissions ungraded for good. The grades CSV has no confirmed points, so every total is 0, until bjaksic84's real `review.getConfirmedScores` (`log/exams.md`).
-- Not in the exam editor yet, planned for butarca's next pull request: adding and removing criteria (a task made in the editor has exactly one), removing tests, showing the join code, the bonus choice when removing a task (S26), visible field labels with the schema's errors, and saving the draft when the page is closed within 2 seconds of an edit.
-- Next for lukaazman, M2 (by 2026-12-06): task 4, the `ai_requests` table and the real `gradeSubmissionJob` writing through `review.suggest`, which is in `main`. In the limits test a stand-in job with 10 D1 queries took about 24 ms of CPU against the 10 ms limit (`architecture.md` section 4). For the quality test in M3, both raters' scores and the reference are in; tzuntar runs the script against Workers AI (ADR-006).
+- The cron closes due exams with butarca's `closeDueExams`, then runs one `grade.submission` job per run (`LIMITS.jobsPerCronRun`, lowered from 2 by the limits test) with lukaazman's `gradeSubmissionJob`. Until grading M2 task 4 is done, that handler is a stand-in that marks each job done without grading. A done job never runs again (its dedupe key stays taken), so a hidden-test check run on the deployment before then leaves its submissions ungraded for good. Until bjaksic84's real `review.getConfirmedScores` exists, the grades CSV has no confirmed points, so every total is 0 (`log/exams.md`).
+- Not in the exam editor yet (planned for butarca's next pull request): adding and removing criteria (a task made in the editor has exactly one), removing tests, showing the join code, the bonus choice when removing a task (S26), visible field labels with the schema's errors, and saving the draft when the page is closed within 2 seconds of an edit.
+- Next for lukaazman, M2 (by 2026-12-06): task 4, the `ai_requests` table and the real `gradeSubmissionJob`, which writes through `review.suggest` (already in `main`). In the limits test, a stand-in job with 10 D1 queries took about 24 ms of CPU against the 10 ms limit (`architecture.md` section 4). For the quality test in M3, both raters' scores and the agreed reference scores are in; tzuntar runs the script against Workers AI (ADR-006).
 - Next for EloRSL, M2 (by 2026-12-06): task 11, `e2e/gate1.spec.ts`, and task 12, OAuth with Google and GitHub.

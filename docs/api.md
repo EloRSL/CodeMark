@@ -6,13 +6,13 @@ All 33 endpoints, plus 2 test-only endpoints. Types are in `types.md`. The endpo
 
 - **API-1.** Every path starts with `/api`. Registry paths omit `/api` and use Hono parameters (`/exams/:examId`).
 - **API-2.** Requests and responses are JSON (`Content-Type: application/json`), except `auth.start` and `auth.callback` (redirects) and `exams.gradesCsv` (CSV).
-- **API-3.** Every success is `200` with the response type named below. No other success codes.
+- **API-3.** Every success is `200` with the response type named below. No other success codes, except the `302` redirects of #1 and #2.
 - **API-4.** Errors are `ApiErrorBody` with the status from `types.md` (G10).
 - **API-5.** The Worker checks every request in this order, before the handler runs:
   1. POST, PUT, PATCH, DELETE: the `Origin` header equals `APP_ORIGIN`, or `403 FORBIDDEN_ORIGIN` (SEC-4).
   2. Access is not `public`: a valid, unexpired session, or `401 UNAUTHENTICATED`.
-  3. Scope `exam`, `submission` or `scoreRecord`: the thing exists and its exam has the caller as a member, or `404 NOT_FOUND`. A `submission` or `scoreRecord` resolves to its exam first.
-  4. Access `professor` or `student`: the caller's role matches (in the exam when scoped, the user's role otherwise), or `403 FORBIDDEN`.
+  3. Scope `exam`, `submission` or `scoreRecord`: the exam, submission or score record exists and the caller is a member of its exam, or `404 NOT_FOUND`. A `submission` or `scoreRecord` resolves to its exam first.
+  4. Access `professor` or `student`: the caller's role matches, or `403 FORBIDDEN`. The role checked is the caller's role in the exam when the endpoint's scope isn't `none`, and the user's role otherwise.
   5. Query and body pass their schemas, or `400 BAD_REQUEST` with the zod issues in `details`. Path parameters have no schemas: they are strings, and a wrong or unknown ID ends in `404 NOT_FOUND` from the scope check or the handler.
 - **API-6.** These errors can come from any endpoint and are not repeated below: `FORBIDDEN_ORIGIN`, `UNAUTHENTICATED`, `NOT_FOUND` from scope checks, `FORBIDDEN` from role checks, `BAD_REQUEST` from schemas, `INTERNAL`. Each entry lists only its other errors.
 - **API-7.** "State" means `stateOf(exam, now)`. Handlers MUST NOT compare times themselves (G4).
@@ -79,8 +79,8 @@ Index:
 - **Errors (as the `error` query parameter):** `BAD_REQUEST` (missing or mismatched state, expired cookie), `FORBIDDEN` (no verified email), `INTERNAL` (provider error).
 - **Rules:**
   1. Check `state` against the cookie, exchange the code, and delete `__Host-oauth`.
-  2. Email: Google's `email` with `email_verified: true`; GitHub's primary verified email from `GET https://api.github.com/user/emails`. Lowercase it.
-  3. Find the user by `oauth_accounts (provider, provider_user_id)`. Else find a user by email and add an `oauth_accounts` row. Else create a user (locale `sl`, `demo` 0) and its `oauth_accounts` row.
+  2. Take the email: Google's `email` with `email_verified: true`, or GitHub's primary verified email from `GET https://api.github.com/user/emails`. Lowercase it.
+  3. Find the user by `oauth_accounts (provider, provider_user_id)`. If there is none, find a user by email and add an `oauth_accounts` row. If there is still none, create a user (locale `sl`, `demo` 0) and its `oauth_accounts` row.
   4. Set `role` on every sign-in: `professor` if the email is in `PROFESSOR_EMAILS`, otherwise `student` (SEC-11). Update `name` from the profile (GitHub: `name`, or `login` when `name` is empty).
   5. Create a session (SEC-5) and set the cookie.
 
@@ -109,7 +109,7 @@ Index:
 - **Errors:** `404 NOT_FOUND` (no exam with this code, or its state is `draft`); `409 EXAM_CLOSED` (state `closed` or `released`); `409 ENROLMENT_TAKEN`; `403 ENROLMENT_NOT_LISTED`.
 - **Rules:**
   1. Trim and uppercase `joinCode`, then find the exam by `join_code`.
-  2. If the caller is already a member, return its `examId` and change nothing.
+  2. If the caller is already a member, return the exam's `examId` and change nothing.
   3. If the state is `closed` or `released`: `EXAM_CLOSED`.
   4. If the exam has a class list and `enrolmentNo` isn't on it: `ENROLMENT_NOT_LISTED`.
   5. If another member of the exam has `enrolmentNo`: `ENROLMENT_TAKEN`.
@@ -117,8 +117,8 @@ Index:
 
 ### 8. `exams.classList`: PUT `/api/exams/{examId}/class-list`
 
-- **Body:** `ClassListBody`. **Response:** `ClassListResponse` (number of distinct numbers stored).
-- **Rules:** replace the exam's whole list in one batch. `[]` removes the list. Existing members stay members. Allowed in every state.
+- **Body:** `ClassListBody`. **Response:** `ClassListResponse` (the number of distinct enrolment numbers stored).
+- **Rules:** replace the exam's whole class list in one batch. `[]` removes the list. Existing members stay members. Allowed in every state.
 
 ### 9. `members.update`: PATCH `/api/exams/{examId}/members/{userId}`
 
@@ -137,7 +137,7 @@ Index:
   1. Any member may call it. Read one `exams` row, the caller's membership and the notices (CAP-4).
   2. Visible notices: `exam_id = examId` and (`user_id = caller` or (`user_id IS NULL` and the caller is a student member)).
   3. Without `since`: `notices` is `[]`, and `latestNoticeId` is the highest visible notice id (0 if none). The browser starts polling from it.
-  4. With `since`: visible notices with `id > since`, oldest first, at most 50. `latestNoticeId` is the highest visible id overall.
+  4. With `since`: visible notices with `id > since`, oldest first, at most `LIMITS.noticesPerPoll`. `latestNoticeId` is the highest visible id overall.
   5. `serverTime` is the request's `now`. `version` is `current_version`.
 
 ---
@@ -162,7 +162,7 @@ Index:
 - **Rules:**
   1. Professor: `ExamForProfessor`, including `draft` with hidden tests and expected outputs.
   2. Student: `ExamForStudent`. `view` is null in state `draft` or `scheduled`, otherwise the `student_view` of `current_version`. `autocomplete` comes from the settings.
-  3. A student response MUST NOT read `draft` or `snapshot` (CAP-5, SEC-1).
+  3. Building a student response MUST NOT read `draft` or `snapshot` (CAP-5, SEC-1).
 
 ### 14. `exams.saveDraft`: PUT `/api/exams/{examId}/draft`
 
@@ -178,7 +178,7 @@ Index:
   1. `title`: allowed in every state.
   2. `settings`: allowed in every state except `released` (`EXAM_CLOSED`).
   3. `opensAt`: allowed only in `draft` and `scheduled`, otherwise `CONFLICT`.
-  4. `closesAt` (D26): allowed only in `draft`, `scheduled` and `open`, otherwise `EXAM_CLOSED`. A practice exam gets `BAD_REQUEST`. A time earlier than `now` is stored as `now`, so "close now" works with the professor's clock slightly behind.
+  4. `closesAt` (D26): allowed only in `draft`, `scheduled` and `open`, otherwise `EXAM_CLOSED`. A practice exam gets `BAD_REQUEST`. A time earlier than `now` is stored as `now`, so "close now" works even when the professor's clock is slightly behind.
   5. After the change, `closesAt` MUST be later than `opensAt`, otherwise `BAD_REQUEST`.
   6. Students see a new closing time at their next poll. No notice is sent.
 
@@ -191,7 +191,7 @@ Index:
 ### 17. `exams.newVersion`: POST `/api/exams/{examId}/versions`
 
 - **Body:** `NewVersionBody`. **Response:** `VersionResponse`.
-- **Errors:** `409 CONFLICT` in `draft` (publish first) or when the draft equals the current snapshot; `409 EXAM_CLOSED` in `closed` or `released`; `400 BAD_REQUEST` when the draft has no task.
+- **Errors:** `409 CONFLICT` in state `draft` (publish first) or when the draft equals the current version's snapshot; `409 EXAM_CLOSED` in `closed` or `released`; `400 BAD_REQUEST` when the draft has no task.
 - **Rules:**
   1. Allowed in `scheduled` and `open`.
   2. In one batch: insert version `current_version + 1` from the draft with its student view and the note, update `current_version`, and in state `open` add a `task_changed` notice `{ version, note }` for all students (`platform.notifyQuery`).
@@ -209,8 +209,8 @@ Index:
 - **Errors:** `409 CONFLICT` unless the state is `closed` or `released`.
 - **Rules (D18):**
   1. The file starts with the UTF-8 byte order mark. Separator `;`, line ending `\r\n`, decimal comma (`3,5`), no thousands separator. A value containing `;`, `"` or a line break is quoted with `"` and inner quotes doubled. A name or task title starting with `=`, `+`, `-`, `@`, a tab or a carriage return first gets a `'` in front, so a spreadsheet shows it as text instead of running it as a formula.
-  2. Header, in the caller's locale. `sl`: `Vpisna številka;Ime;<task titles>;Skupaj;Največ;Odstotek;Ocena`. `en`: `Enrolment number;Name;<task titles>;Total;Max;Percent;Grade`. Task titles in final-version order; a removed task's title ends with ` (removed)` or ` (odstranjena)`.
-  3. One row per student member, sorted by enrolment number. Per task: the sum of confirmed points of the counted submission (empty when there is none). Total, max, percent (2 decimals) and grade come from `grade()` with confirmed points only.
+  2. Header, in the caller's locale. `sl`: `Vpisna številka;Ime;<task titles>;Skupaj;Največ;Odstotek;Ocena`. `en`: `Enrolment number;Name;<task titles>;Total;Max;Percent;Grade`. Task titles are in final-version order; a removed task's title ends with ` (removed)` in `en` or ` (odstranjena)` in `sl`.
+  3. One row per student member, sorted by enrolment number. Each task column holds the sum of the confirmed points of the student's counted submission for that task (empty when there is none). Total, max, percent (2 decimals) and grade come from `grade()` with confirmed points only.
   4. The route handler reads confirmed scores through `review.getConfirmedScores` (route handlers may call any module, A-4).
 
 ---
@@ -225,9 +225,9 @@ Index:
   1. If the caller already has a submission with this `retryKey`, return its receipt and stop. No other check runs.
   2. Check the state, the version, the task and the count, with the errors above.
   3. `sha256` = SHA-256 hex of the code's UTF-8 bytes (`sha256Hex` in core). `arrivedAt` = `now`. `late` = `!isOnTime(exam, now)`. `lateDecision` = `pending` when late, otherwise null.
-  4. Insert the row, then return the receipt. If the insert hits the unique `(student_id, retry_key)`, read the existing row and return its receipt.
-  5. A practice exam is never late. State `closed` stores the submission as late (S18).
-  6. The response contains only the receipt (S20). It MUST arrive within 2 seconds.
+  4. Insert the row, then return the receipt. If the insert hits the unique key `(student_id, retry_key)`, read the existing row and return its receipt.
+  5. A practice exam is never late. In state `closed` the submission is stored as late (S18).
+  6. The response contains only the receipt (S20) and MUST arrive within 2 seconds.
 
 ### 21. `submissions.mine`: GET `/api/exams/{examId}/my-submissions`
 
@@ -242,7 +242,7 @@ Index:
 
 - **Body:** `LateDecisionBody`. **Response:** `Ok`.
 - **Errors:** `409 CONFLICT` when the submission isn't late or its decision isn't `pending`.
-- **Rules:** in one batch: set `late_decision`, `late_decided_by`, `late_decided_at`, and add a `late_decision` notice `{ submissionId, taskId, decision }` for the student. An accepted submission that is now counted appears in the next `recheck.next` batch, also after the release (ADR-002).
+- **Rules:** in one batch: set `late_decision`, `late_decided_by`, `late_decided_at`, and add a `late_decision` notice `{ submissionId, taskId, decision }` for the student. An accepted submission that is now counted appears in the next `recheck.next` batch, even after the release (ADR-002).
 
 ### 24. `recheck.next`: GET `/api/exams/{examId}/recheck`
 
@@ -259,8 +259,8 @@ Index:
 - **Body:** `RecheckSubmitBody`. **Response:** `RecheckSubmitResponse`.
 - **Errors:** `409 CONFLICT` unless the state is `closed` or `released`; `400 BAD_REQUEST` when a result's `version` isn't the final version or its `outputs` don't have exactly the task's hidden test IDs in task order.
 - **Rules:**
-  1. Skip, without error, any result whose submission isn't counted any more or already has a `hidden_results` row. Count only stored results.
-  2. For each test: `passed = testPassed(output, expectedOutput)` (core). `passed` and `total` per submission.
+  1. Skip, without error, any result whose submission isn't counted any more or already has a `hidden_results` row. `stored` counts only the results that were stored.
+  2. For each test: `passed = testPassed(output, expectedOutput)` (core). Each submission's result also gets the counts `passed` and `total`.
   3. In one batch for the whole request: insert each `hidden_results` row (`ON CONFLICT DO NOTHING`) and, for each, `platform.enqueueQuery(db, { type: 'grade.submission', payload: { submissionId }, dedupeKey: 'grade:' + submissionId, runAfter: now }, now)`.
   4. `gradingJobsQueued` = number of stored results.
 
@@ -274,7 +274,7 @@ Index:
 - **Errors:** `404 NOT_FOUND` (`taskId` isn't in the draft); `400 BAD_REQUEST` (the task has no "ai" criterion); `422 LIMIT_EXCEEDED` (Neurons used today have reached `LIMITS.aiDailyNeuronQuota`); `503 AI_UNAVAILABLE` (the provider failed, or the answer failed the checks twice).
 - **Rules:**
   1. Allowed in every state. Uses the task from the **draft**, so it works before publishing.
-  2. `GradingRequest` with `check: null`. Same checks and one retry as a grading job (`internal-interfaces.md`).
+  2. `GradingRequest` with `check: null`. Same checks and one retry as a grading job (`internal-interfaces.md` section 3, grading).
   3. Record each AI call in `ai_requests` with `kind` `trial` and `submission_id` null.
   4. Stores no score records.
 
@@ -321,22 +321,22 @@ Index:
 
 - **Response:** `ConfirmAllResponse`.
 - **Errors:** `409 CONFLICT` unless the state is `closed` or `released`.
-- **Rules:** confirm, at the suggested points, every record of the submission with `state` `suggested` and a suggestion. Leave records without a suggestion and records already confirmed. One batch with the history rows, and in state `released` one `grade_changed` notice when at least one record was confirmed.
+- **Rules:** confirm, at the suggested points, every record of the submission with `state` `suggested` and a suggestion. Leave records without a suggestion and records already confirmed unchanged. Write everything in one batch with the history rows, and in state `released` add one `grade_changed` notice when at least one record was confirmed.
 
 ### 32. `review.release`: POST `/api/exams/{examId}/release`
 
 - **Response:** `ReleaseResponse`.
-- **Errors:** `409 RELEASE_NOT_READY` when the exam is a practice exam, the state isn't `closed`, or the exam isn't ready. `details`: `{ notChecked: number, notConfirmed: number }`.
+- **Errors:** `409 RELEASE_NOT_READY` when the exam is a practice exam, the state is neither `closed` nor `released`, or the exam isn't ready. `details`: `{ notChecked: number, notConfirmed: number }`.
 - **Rules:**
   1. State `released`: return the stored `releasedAt` and change nothing.
   2. Ready means: every counted submission of every task, except tasks removed without bonus, has a check result and a confirmed record for every criterion of its task.
-  3. In one batch: `exams.releaseQuery(examId, now)` (sets `phase` `released` and `released_at`), set `released_at` = `now` on every confirmed record of the exam's submissions, and add a `results_released` notice for all students.
+  3. In one batch: `exams.releaseQuery(db, examId, now)` (sets `phase` `released` and `released_at`), set `released_at` = `now` on every confirmed record of the exam's submissions, and add a `results_released` notice for all students.
 
 ### 33. `review.myResults`: GET `/api/exams/{examId}/my-results`
 
 - **Response:** `MyResults`.
 - **Rules:**
-  1. Phase not `released`: `{ released: false, tasks: [], total: 0, max: 0, percent: 0, grade: null }`.
+  1. State not `released`: `{ released: false, tasks: [], total: 0, max: 0, percent: 0, grade: null }`.
   2. Otherwise one entry per task of the final version, using the caller's counted submission. A criterion's `points`, `reason` and `comment` are shown only when its record has `released_at`; otherwise they are null.
   3. `total`, `max`, `percent`, `grade` come from `grade()` with released confirmed points only.
   4. Never return a suggestion, quotes, a hidden input, an expected output or test output (SEC-1).
@@ -345,7 +345,7 @@ Index:
 
 ## Test-only endpoints (EloRSL)
 
-They exist only when `APP_ENV` is `test`; otherwise every path under `/api/test/` gives `404 NOT_FOUND`. They are in a separate registry, `testEndpoints`, not among the 33, with `access: 'public'` and `scope: 'none'`. The Worker registers them only when `APP_ENV` is `test`, and they skip the Origin and session checks.
+The Worker registers these only when `APP_ENV` is `test`; otherwise every path under `/api/test/` gives `404 NOT_FOUND`. They are not among the 33 but in a separate registry, `testEndpoints`, with `access: 'public'` and `scope: 'none'`, and they skip the Origin and session checks.
 
 ### T1. `test.clock`: POST `/api/test/clock`
 
@@ -355,4 +355,4 @@ They exist only when `APP_ENV` is `test`; otherwise every path under `/api/test/
 ### T2. `test.runJobs`: POST `/api/test/run-jobs`
 
 - **Response:** `TestRunJobsResponse`.
-- **Rules:** runs `exams.closeDueExams`, then claims and runs due jobs again and again until none is due (at most 100), using the fake clock.
+- **Rules:** runs `exams.closeDueExams`, then claims and runs due jobs again and again until none is due (at most `LIMITS.jobsPerTestRun` jobs), using the fake clock.

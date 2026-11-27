@@ -4,7 +4,7 @@
 
 ## Decision
 
-One frontend and one backend on one database, split into modules. Each module belongs to one role and owns its tables.
+CodeMark is one frontend and one backend on one database, split into modules. Each module belongs to one role and owns its tables.
 
 | Module | Owner | Owns (tables) | Offers |
 | --- | --- | --- | --- |
@@ -19,9 +19,9 @@ One frontend and one backend on one database, split into modules. Each module be
 ## Rules
 
 - **ADR1-1.** A module's tables are written only by that module's code (G3).
-- **ADR1-2.** Other modules call only what the module's `index.ts` exports (`internal-interfaces.md`). ESLint fails an import that reaches past another module's `index.ts`.
-- **ADR1-3.** Dependency order: `platform`, `accounts`, `exams`, `submissions`, `review`, `grading`. Service code calls only earlier modules. Route handlers may call any module. The cron and job handlers are wired in `apps/api/src/app.ts`.
-- **ADR1-4.** The API between browser and Worker is defined once, in `packages/contracts` (`types.md`, `api.md`). Only Rok changes it.
+- **ADR1-2.** Other modules call only what a module's `index.ts` exports (`internal-interfaces.md`). ESLint fails an import that reaches past another module's `index.ts`.
+- **ADR1-3.** Dependency order: `platform`, `accounts`, `exams`, `submissions`, `review`, `grading`. A module's service code calls only modules earlier in this list. Route handlers may call any module. The cron and the job handlers are wired in `apps/api/src/app.ts` (`architecture.md` A-4).
+- **ADR1-4.** The API between the browser and the Worker is defined once, in `packages/contracts` (`types.md`, `api.md`). Only Rok changes it.
 - **ADR1-5.** `.github/CODEOWNERS` sends every change in a module's folders to its owner for review.
 
 ## Do not build

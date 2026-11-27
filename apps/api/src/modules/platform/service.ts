@@ -220,7 +220,7 @@ export async function listNotices(
       .from(notices)
       .where(and(visible, gt(notices.id, since)))
       .orderBy(asc(notices.id))
-      .limit(50),
+      .limit(LIMITS.noticesPerPoll),
     latest,
   ]);
   return {
