@@ -102,6 +102,11 @@ describe('buildCheckSummary', () => {
       { passed: 0, total: 1, firstFailure: { kind: 'error', errorType: null } },
     ],
     [
+      'a hidden input written alone to stderr is not a name',
+      [result({ passed: false, exitCode: 1, stderr: 'secret_input_42\n' })],
+      { passed: 0, total: 1, firstFailure: { kind: 'error', errorType: null } },
+    ],
+    [
       'error with empty stderr',
       [result({ passed: false, exitCode: 1 })],
       { passed: 0, total: 1, firstFailure: { kind: 'error', errorType: null } },
@@ -109,6 +114,14 @@ describe('buildCheckSummary', () => {
   ])('%s', (_, results, expected) => {
     expect(buildCheckSummary(results)).toEqual(expected);
   });
+
+  it.each(['KeyboardInterrupt', 'SystemExit', 'UserWarning', 'BaseException'])(
+    'keeps %s',
+    (name) => {
+      const failed = result({ passed: false, exitCode: 1, stderr: traceback(`${name}: x`) });
+      expect(buildCheckSummary([failed]).firstFailure).toEqual({ kind: 'error', errorType: name });
+    },
+  );
 });
 
 describe('numberLines', () => {
