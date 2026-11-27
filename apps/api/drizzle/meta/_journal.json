@@ -15,6 +15,13 @@
       "when": 1795343103555,
       "tag": "0001_complex_marten_broadcloak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795715713584,
+      "tag": "0002_secret_echo",
+      "breakpoints": true
     }
   ]
 }

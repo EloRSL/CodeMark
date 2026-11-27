@@ -3,3 +3,4 @@
 export * from '../modules/accounts/schema';
 export * from '../modules/platform/schema';
 export * from '../modules/exams/schema';
+export * from '../modules/review/schema';
