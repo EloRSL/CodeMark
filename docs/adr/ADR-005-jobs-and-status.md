@@ -4,7 +4,7 @@
 
 ## Decision
 
-**Jobs.** Work outside a request runs as rows in the `jobs` table. A Cron Trigger runs every minute, closes due exams, and claims up to 2 due jobs (`LIMITS.jobsPerCronRun`), each with an update that only succeeds while the job is still queued. 2 per minute is 2,880 a day, about ten times what the AI quota allows, and keeps a run inside 10 ms of CPU and 50 D1 queries. Part 1 has one job type, `grade.submission`.
+**Jobs.** Work outside a request runs as rows in the `jobs` table. A Cron Trigger runs every minute, closes due exams, and claims one due job (`LIMITS.jobsPerCronRun`) with an update that only succeeds while the job is still queued. 1 per minute is 1,440 a day, about five times what the AI quota allows. It was 2 until the limits test, where a run with two jobs used 27 to 58 ms of CPU against the free plan's 10 ms (`architecture.md` section 4). Part 1 has one job type, `grade.submission`.
 
 **Status endpoint.** `GET /api/exams/{examId}/status` returns `serverTime`, `state`, `opensAt`, `closesAt`, `version`, new `notices` and `latestNoticeId` (`api.md` #10). The exam page polls it every 60 s and pauses in hidden tabs.
 

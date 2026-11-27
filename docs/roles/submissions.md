@@ -23,7 +23,7 @@
 | `getCountedSubmissions`, `isCounted`, `getSubmission`, `getCheckResult`, and `submissionExamId` (the scope resolver, wired in `app.ts`) | lukaazman, bjaksic84, butarca | M2 |
 | `recheck.next`, `recheck.submit` (results plus grading jobs in one batch) | lukaazman | M2 |
 | `HiddenTestCheck` | bjaksic84 (review screen) | M2 |
-| A shared test helper `expectNoHiddenData(json, exam)` that fails when any hidden input or expected output appears | everyone (SEC-1 tests) | M2 |
+| A shared test helper `expectNoHiddenData(json, exam)` that fails when a hidden test's input or expected output appears (public tests' expected outputs are allowed) | everyone (SEC-1 tests) | M2 |
 | The quality-test runs against Workers AI (ADR-006) | lukaazman | M3 |
 
 ## You use
@@ -70,10 +70,10 @@
 ## MUST NOT
 
 - Return anything but the receipt from `submissions.create`.
-- Send an expected output to any browser except in the professor's exam editor, or to the runner (SEC-1, SEC-2).
+- Send a hidden test's expected output to any browser except in the professor's exam editor, or any expected output to the runner (SEC-1, SEC-2).
 - Run hidden tests anywhere but the professor's browser in Part 1.
 - Store a check result against any version but the final one.
 
 ## Done when
 
-Students never receive a hidden input, expected outputs never reach a student or the runner, every counted submission gets checked, and late work is handled correctly.
+Students never receive a hidden test's input or expected output, no expected output reaches the runner, every counted submission gets checked, and late work is handled correctly.

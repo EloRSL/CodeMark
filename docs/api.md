@@ -17,7 +17,7 @@ All 33 endpoints, plus 2 test-only endpoints. Types are in `types.md`. The endpo
 - **API-6.** These errors can come from any endpoint and are not repeated below: `FORBIDDEN_ORIGIN`, `UNAUTHENTICATED`, `NOT_FOUND` from scope checks, `FORBIDDEN` from role checks, `BAD_REQUEST` from schemas, `INTERNAL`. Each entry lists only its other errors.
 - **API-7.** "State" means `stateOf(exam, now)`. Handlers MUST NOT compare times themselves (G4).
 - **API-8.** A handler that writes more than one row puts all writes in one `db.batch()` (G11).
-- **API-9.** No response to a student contains a hidden input or an expected output (SEC-1).
+- **API-9.** No response to a student contains a hidden test's input or expected output (SEC-1).
 
 Index:
 
@@ -208,7 +208,7 @@ Index:
 - **Response:** `200`, `Content-Type: text/csv; charset=utf-8`, `Content-Disposition: attachment; filename="grades-{examId}.csv"`.
 - **Errors:** `409 CONFLICT` unless the state is `closed` or `released`.
 - **Rules (D18):**
-  1. The file starts with the UTF-8 byte order mark. Separator `;`, line ending `\r\n`, decimal comma (`3,5`), no thousands separator. A value containing `;`, `"` or a line break is quoted with `"` and inner quotes doubled.
+  1. The file starts with the UTF-8 byte order mark. Separator `;`, line ending `\r\n`, decimal comma (`3,5`), no thousands separator. A value containing `;`, `"` or a line break is quoted with `"` and inner quotes doubled. A name or task title starting with `=`, `+`, `-`, `@`, a tab or a carriage return first gets a `'` in front, so a spreadsheet shows it as text instead of running it as a formula.
   2. Header, in the caller's locale. `sl`: `Vpisna številka;Ime;<task titles>;Skupaj;Največ;Odstotek;Ocena`. `en`: `Enrolment number;Name;<task titles>;Total;Max;Percent;Grade`. Task titles in final-version order; a removed task's title ends with ` (removed)` or ` (odstranjena)`.
   3. One row per student member, sorted by enrolment number. Per task: the sum of confirmed points of the counted submission (empty when there is none). Total, max, percent (2 decimals) and grade come from `grade()` with confirmed points only.
   4. The route handler reads confirmed scores through `review.getConfirmedScores` (route handlers may call any module, A-4).
@@ -284,8 +284,8 @@ Index:
 - **Rules:**
   1. `jobsQueued`, `jobsFailed`: `grade.submission` jobs whose submission belongs to this exam (a read-only join of `jobs` and `submissions`).
   2. `estimatedFinish`: null when `jobsQueued` is 0 or there is no `ai_requests` row of kind `grade` with status `ok` yet. Otherwise, with `avg` = mean `neurons` of the last 20 such rows (at least 1), `budget` = `LIMITS.aiDailyGradingBudget`, `left` = max(0, `budget` - `neuronsUsedToday`):
-     - `today` = floor(`left` / `avg`). If `jobsQueued` ≤ `today`: `now` + ceil(`jobsQueued` / 2) minutes.
-     - Otherwise `rest` = `jobsQueued` - `today`, `perDay` = max(1, floor(`budget` / `avg`)), `days` = ceil(`rest` / `perDay`): 00:05 UTC tomorrow + (`days` - 1) days + ceil((`rest` - (`days` - 1) × `perDay`) / 2) minutes.
+     - `today` = floor(`left` / `avg`). If `jobsQueued` ≤ `today`: `now` + ceil(`jobsQueued` / `LIMITS.jobsPerCronRun`) minutes.
+     - Otherwise `rest` = `jobsQueued` - `today`, `perDay` = max(1, floor(`budget` / `avg`)), `days` = ceil(`rest` / `perDay`): 00:05 UTC tomorrow + (`days` - 1) days + ceil((`rest` - (`days` - 1) × `perDay`) / `LIMITS.jobsPerCronRun`) minutes.
 
 ---
 

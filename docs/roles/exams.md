@@ -66,8 +66,8 @@
 - `stateOf`: every row of the algorithm, both sides of each boundary, practice.
 - `grade`: points and percent scales, removed task with and without bonus, cap at 10, exactly on a threshold, empty.
 - Every endpoint: each rule and error in `api.md` #11 to #19, plus G15.
-- `exams.get` and `buildStudentView` as a student: no hidden input or expected output anywhere (SEC-1).
-- CSV: BOM, separator, decimal comma, quoting, both header languages.
+- `exams.get` and `buildStudentView` as a student: no hidden test's input or expected output anywhere (SEC-1).
+- CSV: BOM, separator, decimal comma, quoting, the `'` before a formula character, both header languages.
 
 ## MUST NOT
 
