@@ -45,14 +45,14 @@
 
 6. Exam page skeleton: tasks with instructions, tips, rubric (Markdown, SEC-9), the editor, a Submit button, the countdown from `useExamStatus` and `serverOffsetMs`, and the line "Don't write your name in your code" (the AI must never see names).
 
-### M3, by 2026-12-18 (Core)
+### M3, by 2026-12-15 (Core)
 
 7. **Run public tests** with per-test results and the note that they don't decide the grade (S15).
 8. Submit flow: confirmation, `retryKey`, resend on network error, "Submitted at HH:MM", receipt with ID and SHA-256 (S16).
 9. Unsubmitted-changes warning and the "time is up" warning before late submits (S17).
 10. Scheduled state view; reload on state change; task-change banner from `task_changed` notices (S24 student side).
 
-### M4, by 2026-12-23
+### M4, by 2026-12-18
 
 11. `.txt` upload and drag and drop with the replace confirmation (S13).
 12. Autosave to `localStorage` every 5 seconds, key `exam:{examId}:task:{taskId}` (S14).

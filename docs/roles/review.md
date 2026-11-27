@@ -45,14 +45,14 @@
 2. `suggest` with every write rule (new suggestion on a confirmed record sets `new_suggestion` only).
 3. `review.queue`, `review.submission`, `review.confirm`, `review.confirmAll`, `review.release`, `review.myResults` with their rules; `getConfirmedScores`.
 
-### M3, by 2026-12-18 (Core)
+### M3, by 2026-12-15 (Core)
 
 4. Review screen (S32, S33, S34): `HiddenTestCheck` at the top, then the queue with filters; per submission: code with quoted lines highlighted, each criterion with suggested points, reason, flag, confirm or change with comment, "Accept all", "Next".
 5. Release button with the not-ready counts from `RELEASE_NOT_READY` (S36).
 6. Results page (S38): per task the check (passed of total), per criterion points, reason and comment, total, percent, grade, and the label "Suggested by AI, confirmed by your professor".
 7. Score the quality-test samples as rater B (`apps/api/src/modules/grading/quality/`, ADR-006) without looking at lukaazman's scores, then agree the reference scores with him.
 
-### M4, by 2026-12-23
+### M4, by 2026-12-18
 
 8. Source labels (AI, tests, professor) and the history list (S35).
 

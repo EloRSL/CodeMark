@@ -48,14 +48,14 @@
 
 4. `ai_requests` table; `gradeSubmissionJob` with the fake, writing through `review.suggest`; `onFailed`.
 
-### M3, by 2026-12-18 (Core)
+### M3, by 2026-12-15 (Core)
 
 5. Workers AI provider and the prompt (all rules in `internal-interfaces.md` section 3), `PROMPT_VERSION`, `MODEL_PRICES`, `JSON_MODE_MODELS`.
 6. The budget wait at 9,000 Neurons; retries come from the platform (S30).
 7. The quality-test script (ADR-006), with how to run it in `quality/README.md`, tested with the fake. tzuntar runs it against Workers AI; from his output, write `docs/ai-quality.md` with the five bar results and real tokens per grading, and recommend `AI_MODEL` to Rok.
 8. `grading.aiStatus` and the panel.
 
-### M4, by 2026-12-23
+### M4, by 2026-12-18
 
 9. `grading.trial` (S10).
 10. With tzuntar: test that an accepted late submission is graded before and after the release.

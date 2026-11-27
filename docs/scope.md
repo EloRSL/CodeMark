@@ -2,25 +2,47 @@
 
 Part 1 is the basic platform. It supports Python only, and no student code runs on our server: the server stores data, checks results and calls the AI. Part 1 is used only with demo and test users.
 
+Part 2 starts after M3 and ends at M6: a server sandbox for the hidden tests, AI drafts of rubrics and tests, and more reliable grading with the features marked "Part 2" in the last table. Rok writes its items, owners and role files by M3; until then nothing of it is built (SC-3). From M3 on, each member moves to their Part 2 items once all their Part 1 items are done. Fixes that Gate 1 needs always come first.
+
 Rules for this file:
 
 - **SC-1.** Build only the items in the table below. Every pull request names the scope IDs it implements.
 - **SC-2.** Core items come first. Don't start a non-Core item while one of your Core items is unfinished.
 - **SC-3.** MUST NOT build anything from the "Not in Part 1" list, not even partly or behind a flag. If a task seems to need one, stop and ask Rok.
 - **SC-4.** A new idea goes to Rok for Part 3 or a later list. It never goes into Part 1.
+- **SC-5.** After M1, a change the professor asks for goes in only if the professor takes out something of a similar size; otherwise it goes to Part 2 or Part 3. Rok writes each change down with its effect on the dates.
 
 ## Milestones
 
-| # | Milestone | Done when | Date |
-| --- | --- | --- | --- |
-| M1 | Start | The repository, demo sign-in and the deployment work. The limits test on the deployed free Worker has passed. `stateOf` and the AI fake exist. | 2026-11-29 |
-| M2 | Connected | The Gate 1 script (`docs/gate1.md`) runs end to end as an automated test, with stand-ins where a part isn't built yet. | 2026-12-06 |
-| M3 | Core | Every Core item works with the real parts, and the Gate 1 script passes with the AI fake. | 2026-12-18 |
-| M4 | Part 1 complete | Every other Part 1 item is done. | 2026-12-23 |
-| M5 | Gate 1 | The Gate 1 script runs on the deployed platform with the real AI. | 2026-12-30 |
-| M6 | Hand-in | Part 1 is handed in. | the course's date, to be confirmed |
+| # | Milestone | Done when | Activities | Deliverables | Date |
+| --- | --- | --- | --- | --- | --- |
+| M1 | Start | The repository, demo sign-in and the deployment work. The limits test on the deployed free Worker has passed. `stateOf` and the AI fake exist. | A11, A12, A13 | IZ 11.1, IZ 12.1, IZ 12.2, IZ 13.1, IZ 13.2 | 2026-11-29 |
+| M2 | Connected | The Gate 1 script (`docs/gate1.md`) runs end to end as an automated test, with stand-ins where a part isn't built yet. | A21 | IZ 21.1 | 2026-12-06 |
+| M3 | Core | Every Core item works with the real parts, and the Gate 1 script passes with the AI fake. | A22, A23 | IZ 22.1, IZ 23.1, IZ 23.2 | 2026-12-15 |
+| M4 | Part 1 complete | Every other Part 1 item is done. | A24 | IZ 24.1 | 2026-12-18 |
+| M5 | Gate 1 | The Gate 1 script runs on the deployed platform with the real AI. | A25 | IZ 25.1 | 2026-12-23 |
+| M6 | Gate 2 and hand-in | Part 2 works, is frozen and handed in: the server sandbox gives the same results as the browser runner on the shared cases and runs the hidden-test check, the AI drafts rubrics and tests, and repeated grading warns when its suggestions disagree. | A31, A32, A33, A34 | IZ 31.1, IZ 32.1, IZ 33.1, IZ 34.1, IZ 34.2 | 2027-01-12 |
 
-If time runs short, non-Core items move to January. Gate 1 needs only Core items. Christmas week is the buffer.
+The activities (A) and deliverables (IZ) are those of the project plan. A0, project management, runs the whole time and delivers the plan (IZ 0.1) and the final report (IZ 0.2). Work for a milestone starts once Rok confirms the previous one is done; Part 2 is the exception above. The team takes a break from 24 December to 2 January.
+
+A scope item belongs to the activity of the milestone in its "By" column. At M3, the items under "The professor sets up an exam", "Students take the exam" and "Changes to the exam", and the accounts items, are A22; the items under "Hidden tests", "Grading after the deadline", "The professor reviews" and "Students see their results" are A23.
+
+| Activity | Dates | Deliverables |
+| --- | --- | --- |
+| A11 Requirements and scope | 2026-11-03 to 2026-11-10 | IZ 11.1 the scope and the three-part plan (this file) |
+| A12 Architecture and interfaces | 2026-11-11 to 2026-11-19 | IZ 12.1 `architecture.md` and the ADRs, IZ 12.2 `api.md`, `types.md` and `conventions.md` |
+| A13 Project setup and foundations | 2026-11-20 to 2026-11-27 | IZ 13.1 the repository with CI and deployment, IZ 13.2 the limits test report (`architecture.md` section 4) |
+| A21 Connected system with stand-ins | 2026-11-30 to 2026-12-04 | IZ 21.1 `e2e/gate1.spec.ts` |
+| A22 Exam setup and taking the exam | 2026-12-07 to 2026-12-15 | IZ 22.1 the working exam setup and exam page |
+| A23 Grading, review and results | 2026-12-07 to 2026-12-15 | IZ 23.1 the working grading, review and results; IZ 23.2 `docs/ai-quality.md` |
+| A24 Finishing Part 1 | 2026-12-16 to 2026-12-18 | IZ 24.1 Part 1 with the README |
+| A25 Gate 1 | 2026-12-21 to 2026-12-23 | IZ 25.1 the Gate 1 run on the deployment |
+| A31 Server sandbox | 2026-12-16 to 2027-01-08, without the break | IZ 31.1 the sandbox for the hidden tests |
+| A32 AI help with exam setup | 2026-12-16 to 2027-01-08, without the break | IZ 32.1 AI drafts of rubrics and tests |
+| A33 More reliable grading and the other Part 2 features | 2026-12-16 to 2027-01-08, without the break | IZ 33.1 repeated grading and the Part 2 features |
+| A34 Gate 2 and hand-in | 2027-01-11 to 2027-01-12 | IZ 34.1 the final docs and guides, IZ 34.2 the presentation and demo |
+
+If time runs short, Part 1's non-Core items that missed M4 come before any Part 2 work in January. Gate 1 needs only Core items. Gate 2 needs only the sandbox, the AI drafts and repeated grading with its warning, so the other Part 2 features are the first to go.
 
 ## Part 1 items
 

@@ -62,7 +62,7 @@ These apply to every change, in every module.
 | G16 | MUST NOT add a runtime dependency (code that ships to the browser, the Worker or the runner site) that isn't in the stack table in `docs/architecture.md` without Rok's approval. Dev-only tools that serve the stack (`@types/*`, `typescript-eslint`, ESLint and Prettier plugins, test helpers, a script runner for `pnpm dev`) MAY be added as dev dependencies; list them in the pull request. |
 | G17 | Secrets go only in `.dev.vars` (local, never committed), Cloudflare secrets (the deployed Worker) and the GitHub environment `production` (the deploy workflow's Cloudflare credentials, section 12). MUST NOT commit a secret or a real student's data. MUST NOT put either in a GitHub repository variable, an issue or a pull request: the repository is public, and its Actions logs show every repository variable. |
 | G18 | Change only files your role owns (see `.github/CODEOWNERS` and your role file). Your role log in `docs/log/` counts as yours (G20). To change another role's files, open a pull request that their owner reviews. |
-| G19 | Commits look like a person wrote them. MUST NOT spam commits: one commit per finished, working step, usually 1 to 5 per pull request, and a fix to your own unpushed commit is amended into it instead of added as a new one. Titles are short, plain sentences in the imperative, at most 60 characters, with no prefix (`feat:`, `fix(api):`, `chore:`), no tags in brackets, no emoji and no full stop at the end. A description is optional: only when the title isn't enough, one to three plain sentences on what changed and why, with no headings, no list of every file and no "This commit...". Pull request titles follow the same rule, because a squash merge turns them into the commit on `main`. Good: `Add the submit endpoint`, `Fix the countdown after a tab switch`. Bad: `feat(submissions): implement submission endpoint with retry key support`. |
+| G19 | Commits look like a person wrote them. MUST NOT spam commits: one commit per finished, working step, usually 1 to 5 per pull request, and a fix to your own unpushed commit is amended into it instead of added as a new one. Titles are short, plain sentences in the imperative, at most 60 characters, with no prefix (`feat:`, `fix(api):`, `chore:`), no tags in brackets, no emoji and no full stop at the end. A description is optional: only when the title isn't enough, one to three plain sentences on what changed and why, with no headings, no list of every file and no "This commit...". Pull request titles follow the same rule, because a squash merge turns them into the commit on `main`. That commit's description is one line naming the activity, the milestone and the scope IDs, like `A22 (M3): S12, S13`; Rok adds it when merging. Good: `Add the submit endpoint`, `Fix the countdown after a tab switch`. Bad: `feat(submissions): implement submission endpoint with retry key support`. |
 | G20 | Every pull request that adds something other code or people can use, or makes the code differ from a doc, MUST record it in the author's role log (`docs/log/`) in the same pull request (section 11). Before using another module's functions, hooks or components, read that module's role log. |
 
 ## 6. Repository layout
@@ -119,7 +119,7 @@ These exist since milestone 1. Run them from the repository root; they work the 
 
 ## 8. Definition of done for every pull request
 
-- [ ] It implements items from its role file and names their scope IDs (`S12`) and rule IDs.
+- [ ] It implements items from its role file and names their activity and milestone (`A22 (M3)`, `docs/scope.md`), their scope IDs (`S12`) and rule IDs.
 - [ ] Typecheck, lint, formatting, tests and the translation check pass.
 - [ ] Every new text is in both `sl.json` and `en.json`.
 - [ ] A changed `schema.ts` comes with its generated migration. Applied migrations are never edited. If `main` gains a migration after you generated yours, delete your migration (its `.sql`, its snapshot and its journal entry), rebase on `main` and run `pnpm db:generate` again; never renumber or merge migrations by hand.
@@ -135,7 +135,7 @@ These exist since milestone 1. Run them from the repository root; they work the 
 | File | Answers |
 | --- | --- |
 | `docs/glossary.md` | what each term means |
-| `docs/scope.md` | what Part 1 includes (S1 to S43, Core items marked), what it excludes, and the milestones |
+| `docs/scope.md` | what Part 1 includes (S1 to S43, Core items marked), what it excludes, the milestones with their activities and deliverables, and when Part 2 is planned |
 | `docs/architecture.md` | the stack, decisions D1 to D28, limits, security rules, environments, the deployment, failure handling |
 | `docs/data-model.md` | every table, column, constraint and owner |
 | `docs/types.md` | every shared type: exam content, API bodies and responses, errors, jobs, notices, runner, AI |
@@ -216,16 +216,20 @@ Newest entry first in its section, one entry per item, at most five lines. The e
 ### Branches and pull requests
 
 1. Start every task from an up-to-date `main` (`git switch main`, then `git pull`), on a short branch named `<github-name>/<topic>` (D19), for example `timursic2/runner-timeouts`.
-2. Push the branch and open a pull request into `main`. Its title follows G19, and its description names the scope and rule IDs (section 8).
+2. Push the branch and open a pull request into `main`. Its title follows G19, and its description names the activity, the milestone, and the scope and rule IDs (section 8).
 3. CI (`.github/workflows/ci.yml`, job `check`) runs on every pull request and on every push to it: `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm lint`, `pnpm format:check`, `pnpm check:i18n`, `pnpm test`, `pnpm build`, then Chromium for Playwright and `pnpm e2e`. It takes about a minute and a half. A pull request can't be merged until `check` passes.
-4. CODEOWNERS asks the owners of the files you changed for a review automatically. GitHub requires no approval, but a change named in section 8 still needs tzuntar's review before it's merged.
+4. CODEOWNERS asks the owners of the files you changed for a review automatically. GitHub requires no approval, but a change named in section 8 still needs tzuntar's review before it's merged. A review is done within one working day. If the author and the reviewer don't agree within a day, Rok decides.
 5. Rok merges every pull request. He is the final gate.
 
-A ruleset protects `main`: nobody can push to it directly, force-push or delete it, and the only way in is a pull request merged with a squash. The squash makes the pull request one commit on `main`, titled with the pull request title and, by default, without a description; the separate commits on your branch don't reach `main`. After the merge GitHub deletes the branch. Don't push to it again, because that re-creates it; start the next task on a new branch from `main`.
+A ruleset protects `main`: nobody can push to it directly, force-push or delete it, and the only way in is a pull request merged with a squash. The squash makes the pull request one commit on `main`, titled with the pull request title and described by the one line from G19; the separate commits on your branch don't reach `main`. After the merge GitHub deletes the branch. Don't push to it again, because that re-creates it; start the next task on a new branch from `main`.
 
 ### What a merge does
 
 Every merge to `main` deploys (`.github/workflows/deploy.yml`, `architecture.md` section 5). About a minute later the change is live at `https://codemark.elorsl.workers.dev`, which is also the demo (D24). One deploy runs at a time; a second merge waits for the first. A failed deploy shows red in the Actions tab, and the version before it stays live.
+
+### The weekly meeting
+
+Once a week the team meets briefly. Everyone shows what they merged since the last meeting, and the team goes through the milestones and the risks. Pull requests that waited more than a day for a review come up here. When a member misses the agreed work two weeks in a row, Rok goes through the reason with them and hands their tasks on the critical path to others.
 
 ### State on 2026-11-27
 

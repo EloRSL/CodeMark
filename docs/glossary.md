@@ -88,6 +88,10 @@ Every term below has exactly one meaning. Use it exactly as written, in code nam
 | --- | --- |
 | Core item | A scope item the Gate 1 script needs. Built before every other item (`docs/scope.md`). |
 | Gate 1 | The test that ends Part 1: the Gate 1 script runs without help on the deployed platform with the real AI (`docs/gate1.md`). |
+| Part 2 | The work from M3 to M6: the server sandbox, AI drafts of rubrics and tests, and more reliable grading. Planned by M3 (`docs/scope.md`). |
+| Gate 2 | The check that ends Part 2 at M6. Its steps are written by M3. |
 | Stand-in | A temporary implementation that returns fixed, valid data so others can build before the real part exists. The AI fake, the fake clock and the fake runner are stand-ins. |
 | Fake clock | `POST /api/test/clock`, only when `APP_ENV=test`. Moves the server's time. |
 | Milestone | One of six dated steps in `docs/scope.md`. |
+| Activity | One step of the project plan, from A0 to A34 (`A22`). Each milestone ends one or more activities (`docs/scope.md`). |
+| Deliverable | A result of an activity, named `IZ` and a number (`IZ 21.1`), such as a report, a test or a demo (`docs/scope.md`). |

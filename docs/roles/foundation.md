@@ -42,6 +42,8 @@
 
 ## Tasks in order
 
+Project management (A0) runs alongside every task: the weekly meeting with the risk register, a short progress report at each milestone from M1 to M5, showing the A22 and A23 work to the professor at M3, and the final report (IZ 0.2) at M6.
+
 ### M1, by 2026-11-29
 
 1. Monorepo with pnpm, TypeScript strict, ESLint, Prettier; `apps/web`, `apps/api`, `apps/runner`, `packages/contracts`, `packages/core`, `e2e`.
@@ -60,20 +62,25 @@
 11. `e2e/gate1.spec.ts` following `gate1.md`, with the AI fake and the fake clock, using API calls where a screen doesn't exist yet. It runs in CI from now on.
 12. OAuth with Google and GitHub (`auth.start`, `auth.callback`), professor role from `PROFESSOR_EMAILS`.
 
-### M3, by 2026-12-18 (Core)
+### M3, by 2026-12-15 (Core)
 
 13. `exams.join` and `members.update` (S2), with the student home page at `/` (my exams and the join form) and the members page at `/exams/:examId/students`.
 14. Access tests for every endpoint: signed out, non-member, wrong role (S4, G15).
 15. Full demo seed per `demo-data.md`, generated from `packages/core/src/demo/` (S40).
+16. Plan Part 2: review the six ADRs (ADR-R3), agree the faculty VM's size and access with the professor (the sandbox can't start without it), decide who builds which Part 2 item, and write Part 2's scope items, role files and Gate 2 check (`scope.md`, M6).
 
-### M4, by 2026-12-23
+### M4, by 2026-12-18
 
-16. `exams.classList` and its upload form (S3).
-17. README: setup, demo accounts, a walk-through of one exam, the three Part 1 statements (S41), and the database export to run after every release (`wrangler d1 export codemark-db --remote`, kept in a private folder only Rok and tzuntar can open, the two Cloudflare administrators, D23). Collect each role's section.
+17. `exams.classList` and its upload form (S3).
+18. README: setup, demo accounts, a walk-through of one exam, the three Part 1 statements (S41), and the database export to run after every release (`wrangler d1 export codemark-db --remote`, kept in a private folder only Rok and tzuntar can open, the two Cloudflare administrators, D23). Collect each role's section.
 
-### M5, by 2026-12-30
+### M5, by 2026-12-23
 
-18. Run the Gate 1 script on the deployment with `AI_PROVIDER=workers-ai`. Check request and D1 usage in the Cloudflare dashboard afterwards.
+19. Run the Gate 1 script on the deployment with `AI_PROVIDER=workers-ai`, and record the run for the professor (IZ 25.1). Check request and D1 usage in the Cloudflare dashboard afterwards: an exam with 300 students is about 36,000 requests in two hours and must stay under the 100,000 a day, at no cost.
+
+### M6, by 2027-01-12 (Part 2)
+
+20. Your Part 2 tasks from task 16. Then Gate 2 and the hand-in (A34): the full test run, the final docs and guides (IZ 34.1), the presentation and demo with the team (IZ 34.2) and the final report (IZ 0.2).
 
 ## Tests you write
 
