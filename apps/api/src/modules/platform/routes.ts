@@ -1,9 +1,29 @@
+import { stateOf } from '@codemark/core';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../../http/context';
+import { ApiError } from '../../http/errors';
 import { implement } from '../../http/registry';
 import { clock } from '../../platform/clock';
-import { runDueJobs, type JobHandlers } from './service';
-import { closeDueExams } from '../exams';
+import { listNotices, runDueJobs, type JobHandlers } from './service';
+import { closeDueExams, getExam } from '../exams';
+
+const iso = (ms: number) => new Date(ms).toISOString();
+
+/** api.md #10. CAP-4: the exam row, the membership (read by the access check) and the notices. */
+export function platformRoutes(app: Hono<AppEnv>): void {
+  implement(app, 'exams.status', async ({ db, now, query, examId, membership }) => {
+    const exam = await getExam(db, examId);
+    if (!exam) throw new ApiError('NOT_FOUND', 'No such exam');
+    return {
+      serverTime: iso(now),
+      state: stateOf(exam, now),
+      opensAt: iso(exam.opensAt),
+      closesAt: exam.closesAt === null ? null : iso(exam.closesAt),
+      version: exam.currentVersion,
+      ...(await listNotices(db, membership, query.since)),
+    };
+  });
+}
 
 /** api.md T1 and T2. app.ts registers these only when APP_ENV is test. */
 export function testRoutes(app: Hono<AppEnv>, jobHandlers: JobHandlers): void {

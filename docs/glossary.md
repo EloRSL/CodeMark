@@ -76,7 +76,7 @@ Every term below has exactly one meaning. Use it exactly as written, in code nam
 | Term | Code name | Meaning |
 | --- | --- | --- |
 | Job | `jobs` row | Work done outside a request, run by the cron. Part 1 has one job type: `grade.submission`. |
-| Cron run | `scheduled()` | Runs every minute: closes due exams, then runs up to 2 due jobs. |
+| Cron run | `scheduled()` | Runs every minute: closes due exams, then runs one due job (`LIMITS.jobsPerCronRun`). |
 | Notice | `notices` row, `Notice` | A message to the browser, picked up by the next status poll. Five kinds, with payloads and recipients in `docs/types.md`. |
 | Status poll | `GET /api/exams/{examId}/status` | The exam page asks every 60 seconds for the state, times, version and new notices. Paused in hidden tabs. |
 | Neuron | `neurons` | Workers AI's unit of usage. 10,000 a day are free; grading stops at 9,000 and keeps 1,000 for trial grading. |

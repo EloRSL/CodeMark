@@ -1,12 +1,13 @@
 import {
   LIMITS,
   type Access,
+  type Member,
   type Scope,
   type UpdateMeBody,
   type UserRole,
 } from '@codemark/contracts';
 import { sha256Hex } from '@codemark/core';
-import { and, eq, gt } from 'drizzle-orm';
+import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import type { Context } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
 import type { BatchItem, Db } from '../../db/client';
@@ -115,6 +116,33 @@ export async function getMembership(
 
 export function addMemberQuery(db: Db, member: Membership): BatchItem {
   return db.insert(examMembers).values(member);
+}
+
+/** The exam's student members with their names, by enrolment number. */
+export async function listStudentMembers(db: Db, examId: string): Promise<Member[]> {
+  return db
+    .select({
+      userId: users.id,
+      name: users.name,
+      email: users.email,
+      role: examMembers.role,
+      enrolmentNo: examMembers.enrolmentNo,
+    })
+    .from(examMembers)
+    .innerJoin(users, eq(users.id, examMembers.userId))
+    .where(and(eq(examMembers.examId, examId), eq(examMembers.role, 'student')))
+    .orderBy(asc(examMembers.enrolmentNo));
+}
+
+/** User id to name. Unknown ids are left out. */
+export async function getUserNames(db: Db, userIds: string[]): Promise<Map<string, string>> {
+  if (userIds.length === 0) return new Map();
+  // One bound JSON array instead of IN (?, ?, ...): D1 allows at most 100 bound parameters.
+  const rows = await db
+    .select({ id: users.id, name: users.name })
+    .from(users)
+    .where(sql`${users.id} IN (SELECT value FROM json_each(${JSON.stringify(userIds)}))`);
+  return new Map(rows.map((row) => [row.id, row.name]));
 }
 
 export async function resolveScopeExamId(

@@ -107,13 +107,13 @@ All limits live in `LIMITS` in `packages/contracts/src/limits.ts` (G12). Names a
 | `aiDailyGradingBudget` | 9000 | grading jobs stop here; the rest is for trial grading |
 | `jobMaxAttempts` | 5 | |
 | `jobRetryDelaysMs` | `[60000, 300000, 900000, 3600000]` | wait after attempts 1, 2, 3 and 4 |
-| `jobsPerCronRun` | 2 | |
+| `jobsPerCronRun` | 1 | |
 | `jobLockMs` | 600000 | a running job's lock |
 | `sessionMs` | 1209600000 | 14 days |
 | `classListMax` | 2000 | enrolment numbers in one class list |
 | `reviewPageSize` | 50 | review queue items per page |
 
-`versionBytes` is confirmed or lowered by the limits test in milestone 1 (EloRSL). If the test fails, Rok lowers the number here before anyone builds on it.
+The limits test (foundation task 10) ran on 2026-11-27 on a temporary copy of the Worker on the free plan, with a 512 KB exam. CPU times: saving it 9 to 36 ms, publishing it 10 to 22 ms, a new version 17 to 27 ms; a cron run with no job 4 to 5 ms, with one stand-in grading job 24 ms, with two 27 to 58 ms, about the same for a 25 KB exam. Cloudflare stopped none of them, but it allows a Worker to go over 10 ms only now and then and stops one that does so consistently. So `jobsPerCronRun` went from 2 to 1, and `versionBytes` stays, because a smaller exam saves barely faster (25 KB: 9 to 17 ms).
 
 ## 5. Environments and configuration
 
@@ -194,7 +194,7 @@ tzuntar reviews every change that touches these rules.
 
 | ID | Rule |
 | --- | --- |
-| SEC-1 | No response to a student contains a hidden test's input or any test's expected output. Hidden inputs go only to the exam's professor: in `GET /api/exams/{examId}/recheck`, the exam editor (`exams.get`) and the review screen (`review.submission`). Expected outputs go only to the exam's professor, in the exam editor and the review screen, never to the runner or the AI. Each endpoint has a test that asserts this for a student caller. |
+| SEC-1 | No response to a student contains a hidden test's input or expected output. Hidden inputs go only to the exam's professor: in `GET /api/exams/{examId}/recheck`, the exam editor (`exams.get`) and the review screen (`review.submission`). Hidden expected outputs go only to the exam's professor, in the exam editor and the review screen. Public tests' expected outputs also go to the student in the student view (`StudentTestCase`), because the browser compares **Run public tests** (ADR-004). No expected output goes to the runner or the AI (SEC-2). Each endpoint has a test that asserts this for a student caller. |
 | SEC-2 | Expected outputs never go to the runner (no field for them in `RunnerRequest`) and never to the AI (no field in `GradingRequest`). |
 | SEC-3 | Every route's access and scope come from the endpoint registry and are checked by one helper, `checkAccess` in `accounts`, before the handler runs (G8). |
 | SEC-4 | Every request with method POST, PUT, PATCH or DELETE MUST carry an `Origin` header equal to `APP_ORIGIN`, or it gets `403 FORBIDDEN_ORIGIN`. |
@@ -212,7 +212,7 @@ tzuntar reviews every change that touches these rules.
 
 | ID | Rule |
 | --- | --- |
-| CAP-1 | A cron run claims at most `LIMITS.jobsPerCronRun` (2) jobs, because a run has 10 ms of CPU and 50 D1 queries. |
+| CAP-1 | A cron run claims at most `LIMITS.jobsPerCronRun` (1) job, because a run has 10 ms of CPU and 50 D1 queries, and one grading job already took 24 ms of CPU in the limits test (section 4). |
 | CAP-2 | A grading job uses at most 10 D1 queries. |
 | CAP-3 | Bulk writes go in one `db.batch()` or one `INSERT ... SELECT`, which D1 counts as one query. |
 | CAP-4 | The status endpoint reads one exam row, one membership row and the new notices, with an index on `notices(exam_id, id)`. Nothing else. |

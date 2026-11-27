@@ -65,7 +65,7 @@ If time runs short, non-Core items move to January. Gate 1 needs only Core items
 | ID | Core | Item | Owner | With | By |
 | --- | --- | --- | --- | --- | --- |
 | S20 | Core | On submit, the server stores the code with its hash and arrival time before replying. The student gets the receipt and nothing else. | tzuntar | | M3 |
-| S21 | Core | Students never receive a hidden input or any expected output. Expected outputs never go to the runner or the AI. Each endpoint has a test for this (SEC-1). | tzuntar | everyone | M3 |
+| S21 | Core | Students never receive a hidden test's input or expected output. Expected outputs never go to the runner or the AI. Each endpoint has a test for this (SEC-1). | tzuntar | everyone | M3 |
 | S22 | Core | After the exam closes, the professor's review page runs every counted submission against the final version's hidden tests in the runner, one submission at a time, each in a fresh interpreter with no network access and a time limit per test. If the page closes, the next visit continues where it stopped. | tzuntar | timursic2 (runner), bjaksic84 (screen) | M3 |
 | S23 | Core | The server compares outputs with the comparison rule, stores pass or fail with the exam version, and students see the results only after the release. | tzuntar | timursic2 (rule) | M3 |
 

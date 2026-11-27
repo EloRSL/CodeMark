@@ -19,7 +19,7 @@ export const LIMITS = {
   aiDailyGradingBudget: 9000,
   jobMaxAttempts: 5,
   jobRetryDelaysMs: [60000, 300000, 900000, 3600000],
-  jobsPerCronRun: 2,
+  jobsPerCronRun: 1,
   jobLockMs: 600000,
   sessionMs: 1209600000,
   classListMax: 2000,
