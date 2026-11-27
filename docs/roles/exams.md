@@ -48,12 +48,12 @@
 5. `exams.updateSettings` with every rule in `api.md` #15 (S7, S8, S9); `exams.newVersion`; `closeDueExams`; `releaseQuery`.
 6. A first editor page: tasks, criteria, tests, save.
 
-### M3, by 2026-12-18 (Core)
+### M3, by 2026-12-15 (Core)
 
 7. Complete editor (S6): up to 10 tasks; instructions and tips in Markdown with a preview (SEC-9); criteria with kind and points in steps of 0.5; public and hidden tests; time limit; "Add task" creates a valid task (one "ai" criterion "Correctness", 1 point, default time limit). Show the schema's errors next to the fields.
 8. Settings page (S7, S8) and "Close now" and closing-time change (S9). Publish button.
 
-### M4, by 2026-12-23
+### M4, by 2026-12-18
 
 9. Preview as students see it, with a trial grading button per task (S10).
 10. Task change during the exam with a note (S24), versions list.

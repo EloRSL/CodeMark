@@ -48,4 +48,4 @@
 | CI runs both sides against the cases | EloRSL | M1 |
 | Test that one program can't change the next one's result | tzuntar | M2 |
 | Store each result with its version; `checked` flag for review | tzuntar | M2 |
-| Part 2: the VM sandbox passes the same cases before it takes over | Person A | Part 2 |
+| Part 2: the VM sandbox passes the same cases before it takes over | chosen when Part 2 is planned (M3) | M6 |

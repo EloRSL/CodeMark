@@ -49,14 +49,14 @@
 6. `HiddenTestCheck` with the fake runner, then the real one.
 7. `expectNoHiddenData` and SEC-1 tests for #13, #20, #21.
 
-### M3, by 2026-12-18 (Core)
+### M3, by 2026-12-15 (Core)
 
 8. `submissions.mine`. Late marking (S18), the counted rule (S19), version on every submission (S25).
 9. Test that one program can't change the next one's result through the real runner (ADR-004).
 10. Review the access rules and SEC-1 tests of all 33 endpoints.
 11. Run lukaazman's quality-test script against Workers AI with your Cloudflare login, once per candidate model, as ADR-006 says, and give him the output.
 
-### M4, by 2026-12-23
+### M4, by 2026-12-18
 
 12. `submissions.list` and the live list page with late decisions (S31), `submissions.lateDecision`.
 13. Test that an accepted late submission is checked and graded before and after the release (with lukaazman).
