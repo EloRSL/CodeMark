@@ -33,6 +33,8 @@
 | `getSubmission`, `isCounted`, `getCheckResult` | tzuntar | demo data rows from the seed |
 | `getFinalVersion`, `getExam` | butarca | M1 |
 | `JobHandlerDef`, the cron | EloRSL | M1 |
+| Rater B's scores for the quality test | bjaksic84 | M3; agree the reference scores with him |
+| The quality-test runs against Workers AI | tzuntar | M3; you never call Workers AI yourself |
 
 ## Tasks in order
 
@@ -40,7 +42,7 @@
 
 1. Fake provider exactly as in `internal-interfaces.md` section 3.
 2. `grading.ts` with table tests; `checkGradingAnswer` against bad JSON, fenced JSON, missing and extra criteria, out-of-range and non-0.5 points, wrong quotes.
-3. Start the quality test: 20 to 30 samples (good, buggy, not compiling, a few with comments that try to instruct the grader) with reference scores from two team members, in `apps/api/src/modules/grading/quality/`.
+3. Start the quality test: 20 to 30 samples (good, buggy, not compiling, a few with comments that try to instruct the grader) with reference scores from two team members (you and bjaksic84), in `apps/api/src/modules/grading/quality/`.
 
 ### M2, by 2026-12-06
 
@@ -50,7 +52,7 @@
 
 5. Workers AI provider and the prompt (all rules in `internal-interfaces.md` section 3), `PROMPT_VERSION`, `MODEL_PRICES`, `JSON_MODE_MODELS`.
 6. The budget wait at 9,000 Neurons; retries come from the platform (S30).
-7. Run the quality test on the four candidates; write `docs/ai-quality.md` with the five bar results and real tokens per grading; recommend `AI_MODEL` to Rok.
+7. The quality-test script (ADR-006), with how to run it in `quality/README.md`, tested with the fake. tzuntar runs it against Workers AI; from his output, write `docs/ai-quality.md` with the five bar results and real tokens per grading, and recommend `AI_MODEL` to Rok.
 8. `grading.aiStatus` and the panel.
 
 ### M4, by 2026-12-23

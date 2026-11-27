@@ -218,7 +218,7 @@ tzuntar reviews every change that touches these rules.
 | CAP-4 | The status endpoint reads one exam row, one membership row and the new notices, with an index on `notices(exam_id, id)`. Nothing else. |
 | CAP-5 | Frequent requests (status, submit, student exam view) MUST NOT read `exams.draft` or `exam_versions.snapshot`. The student exam view reads `exam_versions.student_view`. |
 | CAP-6 | Run at most one large exam per day. Check request and D1 usage in the Cloudflare dashboard before a real exam. |
-| CAP-7 | Local development and CI use the AI fake, which spends no Neurons. |
+| CAP-7 | Local development and CI use the AI fake, which spends no Neurons. The only exception is tzuntar's quality-test runs (ADR-006). |
 
 ## 8. Failure handling
 

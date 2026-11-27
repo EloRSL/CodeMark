@@ -2,7 +2,7 @@
 
 **Goal:** every submission is stored safely and every hidden test result can be trusted.
 
-**Read first:** `conventions.md`, `glossary.md`, `data-model.md` (submissions), `types.md` (api/submissions, runner), `api.md` (#20 to #25), `internal-interfaces.md` (section 2 compare and hash, section 3 submissions, section 5 `HiddenTestCheck`, section 6), `flows.md` (6, 7, 8), ADR-004, ADR-002, `architecture.md` section 6.
+**Read first:** `conventions.md`, `glossary.md`, `data-model.md` (submissions), `types.md` (api/submissions, runner), `api.md` (#20 to #25), `internal-interfaces.md` (section 2 compare and hash, section 3 submissions, section 5 `HiddenTestCheck`, section 6), `flows.md` (6, 7, 8), ADR-004, ADR-002, ADR-006 (the quality test), `architecture.md` section 6.
 
 ## You own
 
@@ -24,6 +24,7 @@
 | `recheck.next`, `recheck.submit` (results plus grading jobs in one batch) | lukaazman | M2 |
 | `HiddenTestCheck` | bjaksic84 (review screen) | M2 |
 | A shared test helper `expectNoHiddenData(json, exam)` that fails when any hidden input or expected output appears | everyone (SEC-1 tests) | M2 |
+| The quality-test runs against Workers AI (ADR-006) | lukaazman | M3 |
 
 ## You use
 
@@ -53,11 +54,12 @@
 8. `submissions.mine`. Late marking (S18), the counted rule (S19), version on every submission (S25).
 9. Test that one program can't change the next one's result through the real runner (ADR-004).
 10. Review the access rules and SEC-1 tests of all 33 endpoints.
+11. Run lukaazman's quality-test script against Workers AI with your Cloudflare login, once per candidate model, as ADR-006 says, and give him the output.
 
 ### M4, by 2026-12-23
 
-11. `submissions.list` and the live list page with late decisions (S31), `submissions.lateDecision`.
-12. Test that an accepted late submission is checked and graded before and after the release (with lukaazman).
+12. `submissions.list` and the live list page with late decisions (S31), `submissions.lateDecision`.
+13. Test that an accepted late submission is checked and graded before and after the release (with lukaazman).
 
 ## Tests you write
 
