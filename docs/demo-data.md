@@ -1,8 +1,8 @@
 # Demo data
 
-The demo seed gives every role data at each stage from day one. The constants live in `packages/core/src/demo/` (EloRSL, with fixtures from every role). `apps/api/seed/generate.ts` turns them into `apps/api/seed/demo.sql`, with times relative to the moment it runs (R).
+The full demo seed (foundation task 15, M3) gives every role data at each stage of an exam, for testing. Until then the seed holds only the four demo users. The constants live in `packages/core/src/demo/` (owned by EloRSL, with fixtures from every role). `apps/api/seed/generate.ts` turns them into `apps/api/seed/demo.sql`. All times are relative to the moment `generate.ts` runs, called R below.
 
-- `pnpm db:reset` (local): drop the local database, apply migrations, generate the seed with R = now, apply it.
+- `pnpm db:reset` (local): drop the local database, apply the migrations, generate the seed with R = now, and apply the seed.
 - Deployment: EloRSL applies the generated seed once, by hand, with `wrangler d1 execute codemark-db --remote --file=seed/demo.sql`.
 - Tests: the Vitest and Playwright setups apply the same seed to a fresh database.
 
@@ -17,7 +17,7 @@ All IDs below are fixed, so tests can use them. They are valid UUID version 4 st
 | `student2` | `00000000-0000-4000-8000-000000000003` | Bor Kranjc | `bor@demo.invalid` | student | 63240002 |
 | `student3` | `00000000-0000-4000-8000-000000000004` | Cvetka Zupan | `cvetka@demo.invalid` | student | 63240003 |
 
-All have `demo = 1` and `locale = sl`. They have no `oauth_accounts` rows.
+All four users have `demo = 1` and `locale = sl`. They have no `oauth_accounts` rows.
 
 ## Tasks
 
@@ -44,7 +44,7 @@ Task, criterion and test IDs are unique within an exam. The same task uses the s
 | `...0404` | hidden | `-45\n` | `9\n` |
 | `...0405` | hidden | `100000\n` | `1\n` |
 
-`...0301` means `00000000-0000-4000-8000-000000000301`, and so on.
+In the tables on this page, `...0301` means `00000000-0000-4000-8000-000000000301`, and the same for every other ID that starts with `...`.
 
 ### "Count vowels" (`00000000-0000-4000-8000-000000000202`)
 
@@ -81,7 +81,7 @@ Task, criterion and test IDs are unique within an exam. The same task uses the s
 
 ## Exams
 
-All three are published at version 1 with `DEFAULT_SETTINGS`, created by the demo professor, with the professor and all three students as members.
+All three exams are created by the demo professor and published at version 1 with `DEFAULT_SETTINGS`. Their members are the demo professor and all three demo students.
 
 | Exam | ID | Join code | Practice | Opens | Closes | `closed_at` | Tasks |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -89,7 +89,7 @@ All three are published at version 1 with `DEFAULT_SETTINGS`, created by the dem
 | Practice | `...0102` | `PRACTICE` | yes | R - 1 day | null | null | Hello |
 | Closed exam | `...0103` | `CLOSED-2026` | no | R - 3 h | R - 1 h | R - 1 h + 60 s | Sum of digits |
 
-The Demo exam is Open for two hours after a reset. The Closed exam is Closed and has data at every stage of grading.
+The Demo exam is Open for two hours after a reset (from R to R + 2 h). The Closed exam is in the Closed state and has data at every stage of grading.
 
 ## Student code (also used by the Gate 1 script)
 
@@ -135,8 +135,8 @@ print(total)
 | ID | Student | Arrived | Late | Stage | Rows the seed creates |
 | --- | --- | --- | --- | --- | --- |
 | `...0501` | Ana | R - 1 h - 10 min | no | checked and graded | `hidden_results` 3 of 3; 4 `score_records` (suggested, from the fake: 1, 2, 1, runs 3) with history; a `done` job; an `ai_requests` row (model `fake`) |
-| `...0502` | Bor | R - 1 h - 5 min | no | checked only | `hidden_results` 2 of 3 (`-45` failed with exit code 1 and a ValueError traceback); a `queued` job `grade:...0502` |
+| `...0502` | Bor | R - 1 h - 5 min | no | checked only | `hidden_results` 2 of 3 (`-45` failed with exit code 1 and a ValueError traceback); a `queued` job with the dedupe key `grade:...0502` |
 | `...0503` | Cvetka | R - 1 h - 2 min | no | not checked | none |
 | `...0504` | Bor, fixed | R - 1 h + 5 min | yes, `pending` | waiting for a late decision | none |
 
-Locally, the cron runs only when triggered (`pnpm cron`), so Bor's job stays queued until someone runs it. Accepting `...0504` makes it Bor's counted submission, which then needs a check.
+Locally, the cron runs only when someone triggers it with `pnpm cron`, so Bor's job stays queued until then. Accepting `...0504` makes it Bor's counted submission, which then needs a hidden-test check.

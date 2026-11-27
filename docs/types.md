@@ -1,6 +1,6 @@
 # Shared types
 
-Every type here is implemented once, as a zod schema with the same name, in `packages/contracts/src`. The TypeScript type is `z.infer` of that schema. The comments are validation rules and MUST be in the schema.
+Every type here, except the interfaces `Runner` and `AiProvider`, is implemented once, as a zod schema with the same name, in `packages/contracts/src`. The TypeScript type is `z.infer` of that schema. The comments are validation rules and MUST be in the schema, except a rule marked "checked by the caller" or "checked by the handler": the schema can't see the criterion's `maxPoints`, so the code that has the criterion checks it.
 
 Rules:
 
@@ -189,9 +189,9 @@ type Notice = {
 
 | Kind | Recipient (`notices.user_id`) | Sent by |
 | --- | --- | --- |
-| `task_changed` | null: every student of the exam | exams, on a new version while Open |
+| `task_changed` | null: every student of the exam | exams, on a new version in state `open` |
 | `exam_closed` | the exam's professor | exams, from the cron, once |
-| `results_released` | null: every student | review, on release |
+| `results_released` | null: every student of the exam | review, on release |
 | `grade_changed` | one student, or null after a task removal | review (a released score changed), exams (a task removed after release) |
 | `late_decision` | the student who submitted | submissions |
 
@@ -379,7 +379,7 @@ type ExamForProfessor = {
   joinCode: string;
   settings: ExamSettings;
   draft: ExamContent;
-  finalVersionTasks: { id: Uuid; title: string }[]; // task names from the final version for adjustments
+  finalVersionTasks: { id: Uuid; title: string }[]; // the current version's tasks for adjustments (the final version once closed); [] before publishing
   versions: ExamVersionInfo[];    // oldest first
   adjustments: TaskAdjustment[];
 };
@@ -486,7 +486,7 @@ type SuggestionSource = 'ai' | 'tests';
 
 type ScoreSuggestion = {
   criterionId: Uuid;
-  points: number;                 // >= 0, multiple of 0.5, <= the criterion's maxPoints
+  points: number;                 // >= 0, multiple of 0.5; <= the criterion's maxPoints, checked by the caller
   reason: string;
   quotes: AiQuote[];
   source: SuggestionSource;
@@ -554,7 +554,7 @@ type SubmissionReview = {
 };
 
 type ConfirmBody = {
-  points?: number;                // multiple of 0.5, 0 to maxPoints; absent keeps the suggested points
+  points?: number;                // multiple of 0.5; 0 to maxPoints, checked by the handler; absent keeps the suggested points
   comment?: string;               // at most 1000 characters
 };
 
@@ -608,7 +608,7 @@ type AiStatus = {
 
 ## endpoints.ts
 
-The endpoint registry: one entry per endpoint in `api.md`, with `method`, `path` (Hono style, `:examId`), `module`, `access`, `scope`, `summary`, `body?`, `query?`, `response`.
+The endpoint registry: one entry per endpoint in `api.md` (the test endpoints T1 and T2 are in the separate `testEndpoints` registry), with `method`, `path` (Hono style, `:examId`), `module`, `access`, `scope`, `summary`, `body?`, `query?`, `response`.
 
 ```ts
 type Access = 'public' | 'signed-in' | 'professor' | 'student';
@@ -618,4 +618,4 @@ type ResponseKind = z.ZodType | 'redirect' | 'csv';
 ```
 
 - `access: 'professor'` or `'student'` means the caller's role **in the exam** when `scope` isn't `none`, and the user's role when it is `none`.
-- A test in `endpoints.test.ts` checks that every entry is registered by the Worker and every Worker route has an entry.
+- A test in `apps/api/src/http/endpoints.test.ts` checks that the Worker registers every entry and that every Worker route has an entry.

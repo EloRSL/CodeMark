@@ -1,15 +1,15 @@
 # Data model
 
-One D1 database with 15 tables. Each table has one owner module, and only that module's code writes it (G3).
+CodeMark uses one D1 database with 15 tables. Each table has one owner module, and only that module's code writes to the table (G3).
 
 Conventions:
 
 - **DM-1.** SQL names are snake_case. Drizzle field names are camelCase (`enrolment_no` becomes `enrolmentNo`).
-- **DM-2.** Times are `integer` UTC milliseconds (D13). Booleans are `integer` 0 or 1 (Drizzle `integer({ mode: 'boolean' })`). JSON is `text` (Drizzle `text({ mode: 'json' })`), validated with the zod schema named in the table on every read and write.
+- **DM-2.** Times are `integer` UTC milliseconds (D13). Booleans are `integer` 0 or 1 (Drizzle `integer({ mode: 'boolean' })`). JSON is `text` (Drizzle `text({ mode: 'json' })`) and is validated on every read and write with the zod schema that the table names for that column.
 - **DM-3.** IDs are `text` UUIDs (D14), except `notices.id`, which is an autoincrement integer used as a cursor.
 - **DM-4.** Each module defines its tables in `apps/api/src/modules/<module>/schema.ts`. `apps/api/src/db/schema.ts` re-exports all of them for joins.
 - **DM-5.** Every schema change comes with a migration from `drizzle-kit generate`. An applied migration is never edited.
-- **DM-6.** No foreign key constraints between tables of different modules, so modules can be built and tested in any order. Code keeps references valid.
+- **DM-6.** There are no foreign key constraints between tables of different modules, so modules can be built and tested in any order. The code keeps these references valid.
 - **DM-7.** The exam state is never stored. `stateOf()` computes it from `phase`, `opens_at`, `closes_at`, `closed_at` and `practice`.
 
 ## Owners at a glance
@@ -38,7 +38,7 @@ Conventions:
 | demo | integer | not null, default 0; 1 only for seeded demo users |
 | created_at | integer | not null |
 
-Readers: every module that shows a name (submissions, review, exams CSV).
+Readers: every module that shows a name (submissions, review, and exams for the CSV).
 
 ### oauth_accounts
 
@@ -103,7 +103,7 @@ Primary key `(exam_id, enrolment_no)`. No rows for an exam means there is no cla
 | created_at | integer | not null |
 | updated_at | integer | not null |
 
-Index `(status, run_after)`. Readers: grading (counts for `ai-status`).
+Index `(status, run_after)`. Readers: grading (the job counts for `ai-status`).
 
 ### notices
 
@@ -140,7 +140,7 @@ Index `(exam_id, id)`.
 | created_at | integer | not null |
 | updated_at | integer | not null |
 
-Join code format: 8 characters from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, stored and shown as `XXXX-XXXX`. Demo exams use fixed codes (`docs/demo-data.md`). Joining compares the code after trimming and uppercasing.
+Join code format: 8 characters from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, stored and shown as `XXXX-XXXX`. Demo exams use fixed codes instead (`docs/demo-data.md`). When a student joins, the code they typed is trimmed and uppercased before it is compared.
 
 Readers: every module, through `exams` functions.
 
@@ -155,7 +155,7 @@ Readers: every module, through `exams` functions.
 | note | text | not null; empty for version 1, the professor's note otherwise |
 | created_at | integer | not null |
 
-Primary key `(exam_id, version)`. Rows are never updated or deleted. The **final version** is `exams.current_version` once the exam is closed.
+Primary key `(exam_id, version)`. Rows are never updated or deleted. Once the exam is closed, `exams.current_version` is the **final version**.
 
 ### task_adjustments
 
@@ -190,9 +190,9 @@ Primary key `(exam_id, task_id)`. No row means the task counts normally.
 | late_decided_at | integer | null |
 | retry_key | text | not null |
 
-Unique `(student_id, retry_key)`. Index `(exam_id, task_id, student_id, arrived_at)`. Rows are never deleted; only the `late_decision` columns change.
+Unique `(student_id, retry_key)`. Index `(exam_id, task_id, student_id, arrived_at)`. Rows are never deleted; only `late_decision`, `late_decided_by` and `late_decided_at` change.
 
-**Counted submission** (`getCountedSubmissions`): for each student and each task in the final version, the latest accepted late submission if there is one, otherwise the latest on-time submission. Practice exams have none. Rejected and pending late submissions never count.
+**Counted submission** (`getCountedSubmissions`): for each student and each task in the final version, the latest accepted late submission if there is one, otherwise the latest on-time submission. Practice exams have no counted submissions. Rejected and pending late submissions never count.
 
 ### hidden_results
 
@@ -206,7 +206,7 @@ Unique `(student_id, retry_key)`. Index `(exam_id, task_id, student_id, arrived_
 | checked_by | text | not null, the professor's user ID |
 | created_at | integer | not null |
 
-Written only by `POST /api/exams/{examId}/recheck` (S22). Readers: review (check results), grading (check summary).
+Written only by `POST /api/exams/{examId}/recheck` (S22). Readers: review (check results) and grading (check summary).
 
 ## grading (lukaazman)
 
@@ -229,7 +229,7 @@ Written only by `POST /api/exams/{examId}/recheck` (S22). Readers: review (check
 | latency_ms | integer | not null |
 | created_at | integer | not null |
 
-Index `(created_at)`. Neurons used today = sum of `neurons` where `created_at >=` 00:00 UTC today, over all exams.
+Index `(created_at)`. Neurons used today is the sum of `neurons` over all rows with `created_at >=` 00:00 UTC today, for all exams together.
 
 ## review (bjaksic84)
 
@@ -259,8 +259,8 @@ Unique `(submission_id, criterion_id)`. A record exists only for criteria of the
 
 Write rules (ADR-003):
 
-- `suggest` inserts a record as `suggested`, or replaces only `suggested_points`, `reason`, `quotes`, `source`, `flagged`, `ai_request_id` and `updated_at`. On a `confirmed` record it also sets `new_suggestion = 1` and never touches `points` or `state`. A record whose six suggestion columns wouldn't change gets no write and no history row, so the same suggestion arriving again changes nothing, not even `new_suggestion`.
-- `confirm` sets `state = confirmed`, `points`, `comment`, `confirmed_by`, `confirmed_at`, clears `new_suggestion`, and sets `released_at` when the exam is released.
+- `suggest` inserts a new record as `suggested`. On an existing record it replaces only `suggested_points`, `reason`, `quotes`, `source`, `flagged`, `ai_request_id` and `updated_at`. On a `confirmed` record it also sets `new_suggestion = 1` and never touches `points` or `state`. If none of the six suggestion columns (`suggested_points` to `ai_request_id` above) would change, the record gets no write and no history row. So the same suggestion arriving again changes nothing, not even `new_suggestion`.
+- `confirm` sets `state = confirmed`, `points`, `comment`, `confirmed_by` and `confirmed_at`, clears `new_suggestion`, and sets `released_at` when the exam is already released.
 - A record is **released** when `released_at` is not null. Students see only released records.
 
 ### score_history
@@ -277,4 +277,4 @@ Write rules (ADR-003):
 | at | integer | not null |
 | note | text | null; `ai` or `tests` for suggestions, the professor's comment for confirmations |
 
-One row for every insert or change of a score record, in the same batch as the change. For suggestions, `old_points` and `new_points` are the old and new suggested points. For confirmations, they are the old and new confirmed points.
+One row is written for every insert or change of a score record, in the same batch as the change. For suggestions, `old_points` and `new_points` are the old and new suggested points. For confirmations, they are the old and new confirmed points.

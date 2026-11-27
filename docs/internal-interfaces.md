@@ -1,13 +1,13 @@
 # Internal interfaces
 
-What modules call on each other inside the Worker and the browser. Every function here is exported from the named file and nowhere else. Names and signatures MUST match. Owners are in brackets.
+What modules call on each other inside the Worker and the browser. Every function here is exported from the named file and nowhere else. Names and signatures MUST match this file. Owners are in brackets.
 
 Conventions:
 
 - **II-1.** `db` is the Drizzle D1 database (`type Db`, from `apps/api/src/db/client.ts`). `now` is UTC milliseconds from the request or job context (G4).
 - **II-2.** A function whose name ends in `Query` returns an unexecuted statement (`type BatchItem`) for `db.batch([...])`. It writes nothing on its own. Use it to put another module's write into your batch (G11).
-- **II-3.** Functions throw `ApiError` (from `apps/api/src/http/errors.ts`) only when named below. Everything else returns `null` for "not found".
-- **II-4.** A module imports another module only from its `index.ts`, and only modules earlier in the order `platform`, `accounts`, `exams`, `submissions`, `review`, `grading` (A-4). Route handlers may import any module's `index.ts`.
+- **II-3.** A function throws `ApiError` (from `apps/api/src/http/errors.ts`) only when this file says so. Every other function returns `null` for "not found".
+- **II-4.** A module imports another module only through that module's `index.ts`, and only modules earlier in the order `platform`, `accounts`, `exams`, `submissions`, `review`, `grading` (A-4). Route handlers may import any module's `index.ts`.
 
 ## 1. HTTP plumbing (EloRSL)
 
@@ -63,7 +63,7 @@ const clock: {
 };
 ```
 
-A middleware sets `c.set('now', clock.now())` once per request. This file is the only place in `apps/api` allowed to call `Date.now()`.
+A middleware sets `c.set('now', clock.now())` once per request. Apart from test files and the seed script (`apps/api/seed/generate.ts`), this file is the only place in `apps/api` allowed to call `Date.now()` (G4).
 
 ## 2. packages/core (pure functions)
 
@@ -88,7 +88,7 @@ function isOnTime(exam: ExamTiming, arrivedAt: number, studentId?: string): bool
 
 `isOnTime`: `true` for a practice exam; otherwise `arrivedAt < closesAt + LIMITS.graceMs`.
 
-`studentId` is unused in Part 1 (it is there for Part 2's per-student extensions). Required tests: one second before closing (on time), inside the grace period (on time), exactly at `closesAt + graceMs` (late), one second after (late).
+`studentId` is unused in Part 1 (it is there for Part 2's per-student extensions). Required tests: one second before closing (on time), inside the grace period (on time), exactly at `closesAt + graceMs` (late), one second after that (late).
 
 ### compare.ts [timursic2]
 
@@ -101,7 +101,7 @@ function testPassed(result: RunResult, expectedOutput: string): boolean;
 - `normalizeOutput`: replace `\r\n` and `\r` with `\n`; remove spaces and tabs at the end of every line; remove all `\n` at the end of the text.
 - `outputsMatch`: `normalizeOutput(expected) === normalizeOutput(actual)`.
 - `testPassed`: `!result.timedOut && result.exitCode === 0 && outputsMatch(expectedOutput, result.stdout)`.
-- `packages/core/src/compare.cases.json` holds the shared cases `[{ "name", "expected", "actual", "match" }]`, written by timursic2 and tzuntar. At least: line endings, trailing spaces, trailing tabs, trailing empty lines, leading empty lines (count), inner spaces (count), letter case (counts), empty output, non-English characters (`č`, `š`, `ž`). The browser and the Worker both run them in CI.
+- `packages/core/src/compare.cases.json` holds the shared cases `[{ "name", "expected", "actual", "match" }]`, written by timursic2 and tzuntar. They cover at least: line endings, trailing spaces, trailing tabs, trailing empty lines, leading empty lines (they count), inner spaces (they count), letter case (it counts), empty output, non-English characters (`č`, `š`, `ž`). The browser and the Worker both run them in CI.
 
 ### grading.ts [lukaazman]
 
@@ -118,14 +118,14 @@ type AnswerCheck =
 ```
 
 - `runsPoints`: all tests pass (`total > 0 && passed === total`) gives `maxPoints`; else `passed >= 1` gives `floorToHalf(maxPoints * 2 / 3)`; else `smallTypo` gives `floorToHalf(maxPoints / 3)`; else `0`.
-- `buildCheckSummary`: `passed` = results with `passed`; `firstFailure` = the first result that didn't pass: `timeout` if `timedOut`, else `error` if `exitCode !== 0` (with `errorType` = the exception name at the start of the last non-empty line of `stderr`, the text before the first `:`, or `null` if it doesn't match the pattern in `types.md` or doesn't end in `Error`, `Exception`, `Warning`, `Interrupt` or `Exit`; the rest of the line is never sent, because it can repeat a hidden input, and the ending rule stops a program that writes a hidden input alone to `stderr` from sending it as the name, G14), else `wrong_output`. Null when none failed.
+- `buildCheckSummary`: `passed` = the number of results with `passed`. `firstFailure` describes the first result that didn't pass, with kind `timeout` if `timedOut`, else `error` if `exitCode !== 0`, else `wrong_output`; it is null when none failed. For `error`, `errorType` is the exception name at the start of the last non-empty line of `stderr` (the text before the first `:`), or `null` if that name doesn't match the pattern in `types.md` or doesn't end in `Error`, `Exception`, `Warning`, `Interrupt` or `Exit`. The rest of the line is never sent, because it can repeat a hidden input. The ending rule stops a program that writes a hidden input alone to `stderr` from sending that input as the name (G14).
 - `numberLines`: normalize line endings to `\n`, then `"{n}: {line}"` per line, `n` from 1, joined with `\n`.
 - `checkGradingAnswer`, in order:
   1. Strip a Markdown code fence, take the text from the first `{` to the last `}`, `JSON.parse` it. Failure: `ok: false`.
   2. Parse with `GradingAnswer`. Failure: `ok: false` with the zod message.
   3. Every criterion of the request appears exactly once, and no other `criterionId` appears.
   4. Every `points` is between 0 and the criterion's `maxPoints` and a multiple of 0.5.
-  5. Each quote's `line` exists and `text.trim()` equals that code line `.trim()`. A quote that doesn't is dropped, and its criterion goes into `flagged`. This alone never makes `ok: false`.
+  5. Each quote's `line` exists and `text.trim()` equals that code line after `.trim()`. A quote that doesn't is dropped, and its criterion goes into `flagged`. This alone never makes `ok: false`.
 
 ### grade.ts [butarca]
 
@@ -144,7 +144,7 @@ function grade(input: GradeInput): GradeResult;
 - `max` = sum of `maxPoints` of tasks that aren't removed.
 - `total` = confirmed points of tasks that aren't removed, plus confirmed points of removed tasks with `keepAsBonus`.
 - `percent` = `total / max * 100`, or 0 when `max` is 0. Not rounded here.
-- The value compared is `total` when `scale` is `points`, `percent` when `percent`. `grade` = the highest of 10, 9, 8, 7, 6 whose threshold is at most the value (with a tolerance of 1e-9), otherwise 5. It never exceeds 10, even when bonus points push `percent` past 100.
+- The value compared with the thresholds is `total` when `scale` is `points`, and `percent` when `scale` is `percent`. `grade` = the highest of 10, 9, 8, 7, 6 whose threshold is at most the value (with a tolerance of 1e-9), otherwise 5. It never exceeds 10, even when bonus points push `percent` past 100.
 - Required tests: both scales, a removed task with and without bonus, the cap at 10, a value exactly on a threshold, no confirmed points.
 
 ### studentView.ts [butarca]
@@ -163,7 +163,7 @@ function sha256Hex(text: string): Promise<string>;   // SHA-256 of UTF-8 bytes, 
 
 ### demo/ [EloRSL, with fixtures from every role]
 
-The demo users, exams and the Gate 1 codes (`docs/demo-data.md`), as typed constants. The seed and the Gate 1 test both import them.
+The demo users, exams and the Gate 1 codes (`docs/demo-data.md`), as typed constants. The seed and the Gate 1 script both import them.
 
 ## 3. Worker modules
 
@@ -194,14 +194,14 @@ type JobHandlers = { [T in JobType]: JobHandlerDef<T> };
 function runDueJobs(db: Db, env: Env, now: number, limit: number, handlers: JobHandlers): Promise<number>;
 ```
 
-- `enqueue` and `enqueueQuery` validate the payload with `JobPayloads[type]` (DM-2) and throw on a bad payload. They insert with `ON CONFLICT(dedupe_key) DO NOTHING`, so the same job is never queued twice.
+- `enqueue` and `enqueueQuery` validate the payload with `JobPayloads[type]` (DM-2) and throw on a bad payload. They insert with `ON CONFLICT(dedupe_key) DO NOTHING`, so a job with the same `dedupeKey` is never queued twice.
 - `notify` and `notifyQuery` validate the payload with `NoticePayloads[kind]`.
 - `runDueJobs`:
-  1. Expired locks (`status = 'running' AND locked_until < now`): the run that held the job was stopped before it finished, usually by the CPU limit. Set `last_error` to "run stopped before it finished". If `attempts < LIMITS.jobMaxAttempts`, the job goes back to `queued` with its `run_after` unchanged. Otherwise it becomes `failed` and its `onFailed` runs (step 6 applies). Each job failed here counts toward `limit`.
-  2. Select up to the rest of `limit` jobs with `status = 'queued' AND run_after <= now`, oldest `run_after` first.
-  3. Claim and run them one at a time, so a stopped run leaves at most one job locked. Claim with `UPDATE jobs SET status = 'running', locked_until = now + LIMITS.jobLockMs, attempts = attempts + 1 WHERE id = ? AND status = 'queued'`. Skip it if no row changed.
+  1. Jobs with an expired lock (`status = 'running' AND locked_until < now`): the run that held the job was stopped before it finished, usually by the CPU limit. Set `last_error` to "run stopped before it finished". If `attempts < LIMITS.jobMaxAttempts`, the job goes back to `queued` with its `run_after` unchanged. Otherwise it becomes `failed` and its `onFailed` runs (step 6 applies). Each job failed here counts toward `limit`.
+  2. Select jobs with `status = 'queued' AND run_after <= now`, oldest `run_after` first, up to `limit` minus the number of jobs failed in step 1.
+  3. Claim and run them one at a time, so a stopped run leaves at most one job locked. Claim with `UPDATE jobs SET status = 'running', locked_until = now + LIMITS.jobLockMs, attempts = attempts + 1 WHERE id = ? AND status = 'queued'`. Skip the job if no row changed.
   4. A payload that fails its schema: `failed` at once, with the validation error in `last_error`. `onFailed` doesn't run, because it needs a valid payload.
-  5. `run` returns `done`: status `done`. Returns `wait`: status `queued`, `run_after = runAfter`, `attempts - 1` (a wait spends no attempt). Throws: `last_error` = message (first 1000 characters); if `attempts < LIMITS.jobMaxAttempts`, status `queued` and `run_after = now + LIMITS.jobRetryDelaysMs[attempts - 1]`; otherwise status `failed`, then `onFailed`.
+  5. `run` returns `done`: status `done`. Returns `wait`: status `queued`, `run_after = runAfter`, `attempts = attempts - 1` (a wait spends no attempt). Throws: `last_error` = message (first 1000 characters); if `attempts < LIMITS.jobMaxAttempts`, status `queued` and `run_after = now + LIMITS.jobRetryDelaysMs[attempts - 1]`; otherwise status `failed`, then `onFailed`.
   6. If `onFailed` throws: log it and write `onFailed: ` plus the message to `last_error`. The job stays `failed`, and the run goes on with the next job.
   7. Returns the number of jobs claimed, including the ones failed in steps 1 and 4.
 
@@ -221,7 +221,7 @@ type ScopeResolvers = {
 function resolveScopeExamId(db: Db, scope: Scope, params: Record<string, string>, resolvers: Partial<ScopeResolvers>): Promise<string | null>;
 ```
 
-`resolveScopeExamId` maps `exam` to `params.examId` without reading `exams`: a missing exam has no membership, so the membership check (API-5 step 3) already gives `404`. `submission` and `scoreRecord` call the resolver that `apps/api/src/app.ts` passes in, because `accounts` comes before `submissions` and `review` (A-4). Until tzuntar and bjaksic84 export `submissions.submissionExamId` and `review.scoreRecordExamId` and they are wired in `app.ts`, a route with that scope that isn't a `stub` fails with `500 INTERNAL` and the message "scope resolver not wired".
+`resolveScopeExamId` maps `exam` to `params.examId` without reading `exams`: a missing exam has no membership, so the membership check (API-5 step 3) already gives `404`. `submission` and `scoreRecord` call the resolver that `apps/api/src/app.ts` passes in, because `accounts` comes before `submissions` and `review` (A-4). Until tzuntar and bjaksic84 export `submissions.submissionExamId` and `review.scoreRecordExamId` and `app.ts` wires them in, a route with scope `submission` or `scoreRecord` that isn't a `stub` fails with `500 INTERNAL` and the message "scope resolver not wired".
 
 ### exams [butarca]: `apps/api/src/modules/exams/index.ts`
 
@@ -241,7 +241,7 @@ function releaseQuery(db: Db, examId: string, now: number): BatchItem;
 ```
 
 - `getFinalVersion` returns the current version. Callers use it only in state `closed` or `released`, when it can no longer change.
-- `closeDueExams`: select up to 10 exams with `phase = 'published' AND practice = 0 AND closed_at IS NULL AND closes_at + graceMs <= now`. For each: `UPDATE exams SET closed_at = now WHERE id = ? AND closed_at IS NULL`; only if one row changed, `notify` the professor (`created_by`) with `exam_closed {}`. Returns the number closed. A second run finds nothing (ADR-002).
+- `closeDueExams`: select up to `LIMITS.examsClosedPerCronRun` exams with `phase = 'published' AND practice = 0 AND closed_at IS NULL AND closes_at + graceMs <= now`. For each: `UPDATE exams SET closed_at = now WHERE id = ? AND closed_at IS NULL`; only if one row changed, `notify` the professor (`created_by`) with `exam_closed {}`. Returns the number closed. A second run finds nothing (ADR-002).
 - `releaseQuery`: `UPDATE exams SET phase = 'released', released_at = now WHERE id = ? AND phase = 'published'`.
 
 ### submissions [tzuntar]: `apps/api/src/modules/submissions/index.ts`
@@ -260,7 +260,7 @@ function getCheckResult(db: Db, submissionId: string): Promise<CheckResult | nul
 function submissionExamId(db: Db, submissionId: string): Promise<string | null>;   // scope resolver, wired in app.ts
 ```
 
-`getCountedSubmissions` applies the rule in `data-model.md` against the final version's task IDs, and returns `[]` for a practice exam.
+`getCountedSubmissions` applies the counted-submission rule in `data-model.md` to the final version's task IDs, and returns `[]` for a practice exam.
 
 ### review [bjaksic84]: `apps/api/src/modules/review/index.ts`
 
@@ -293,16 +293,16 @@ const PROMPT_VERSION: number;
 1. Load the submission. If it's missing, isn't counted, or belongs to a practice exam: return `done`.
 2. Load the final version's task and the check result. No check result: throw (retry).
 3. Neurons used today ≥ `LIMITS.aiDailyGradingBudget`: return `wait` until 00:05 UTC tomorrow.
-4. If the task has "ai" criteria: build the `GradingRequest` (`check` = `buildCheckSummary`), call `suggestScores`, record an `ai_requests` row, run `checkGradingAnswer`. If it fails, call once more with the error passed as `previousError` and record that row too (`attempt` 2). If the provider throws, record the row with status `error` and throw (retry).
-5. Suggestions: for "ai" criteria, the answer's points, reason and quotes with `source: 'ai'` and `flagged`; after two failed checks, `null` for each "ai" criterion. For the "runs" criterion, `runsPoints` with `smallTypo` from the answer only when `passed === 0` and the code isn't empty after trimming (an empty program earns 0, ADR3-5), `reason` = the answer's `runs.reason` when `smallTypo` was applied, otherwise "", `quotes: []`, `source: 'tests'`.
-6. `review.suggest(...)` once, then return `done`. At most 10 D1 queries in total (CAP-2).
+4. If the task has "ai" criteria: build the `GradingRequest` (`check` = `buildCheckSummary`), call `suggestScores`, record an `ai_requests` row, and run `checkGradingAnswer`. If the check fails, call once more with its error passed as `previousError` and record that row too (`attempt` 2). If the provider throws, record the row with status `error` and throw (retry).
+5. Build the suggestions. For each "ai" criterion: the answer's points, reason and quotes, with `source: 'ai'` and `flagged`; after two failed checks, `null`. For the "runs" criterion: points from `runsPoints`, with `smallTypo` taken from the answer only when `passed === 0` and the code isn't empty after trimming (an empty program earns 0, ADR3-5); `reason` = the answer's `runs.reason` when `smallTypo` was applied, otherwise ""; `quotes: []`; `source: 'tests'`.
+6. Call `review.suggest(...)` once, then return `done`. The whole run uses at most 10 D1 queries (CAP-2).
 
 `gradeSubmissionJob.onFailed`: call `review.suggest` with `null` for every "ai" criterion and the "runs" suggestion computed with `smallTypo: false`, so the professor can grade by hand.
 
 Providers:
 
-- **Fake** (`AI_PROVIDER=fake`): for each criterion, `maxPoints` when `check` is not null and `check.total > 0 && check.passed === check.total`, otherwise `floorToHalf(maxPoints / 2)`. `reason`: `"Fake grader: all hidden tests passed."`, `"Fake grader: {passed} of {total} hidden tests passed."`, or `"Fake grader: no tests ran."` when `check` is null. `quotes`: the first non-empty line of the code with its number, or `[]`. `runs`: `{ smallTypo: check !== null && check.total > 0 && check.passed === 0, reason: "Fake grader: no hidden test passed." }`. Usage: model `fake`, all zeros. It returns `raw = JSON.stringify(answer)`.
-- **Workers AI** (`AI_PROVIDER=workers-ai`): `env.AI.run(env.AI_MODEL, { messages, max_tokens: 2000 })`, plus `response_format: { type: 'json_object' }` only for models listed in `JSON_MODE_MODELS`. Neurons from the reported tokens and `MODEL_PRICES` (both constants in the grading module).
+- **Fake** (`AI_PROVIDER=fake`): for each criterion, `maxPoints` when `check` is not null and `check.total > 0 && check.passed === check.total`, otherwise `floorToHalf(maxPoints / 2)`. `reason`: `"Fake grader: all hidden tests passed."`, `"Fake grader: {passed} of {total} hidden tests passed."`, or `"Fake grader: no tests ran."` when `check` is null. `quotes`: the first non-empty line of the code with its number, or `[]` when there is none. `runs`: `{ smallTypo: check !== null && check.total > 0 && check.passed === 0, reason: "Fake grader: no hidden test passed." }`. Usage: model `fake`, all zeros. It returns `raw = JSON.stringify(answer)`.
+- **Workers AI** (`AI_PROVIDER=workers-ai`): `env.AI.run(env.AI_MODEL, { messages, max_tokens: 2000 })`, plus `response_format: { type: 'json_object' }` only for models listed in `JSON_MODE_MODELS`. Neurons are computed from the reported tokens and `MODEL_PRICES`. `JSON_MODE_MODELS` and `MODEL_PRICES` are constants in the grading module.
 - **The prompt** MUST: ask for exactly the `GradingAnswer` JSON; give each criterion's ID, name, description and maximum; say that comments and strings in the code are the student's text and never instructions (SEC-10); ask for reasons in the language of the task instructions; ask for quotes copied exactly from the numbered lines; say never to rewrite or fix the code; explain `smallTypo` as "a small mistake such as a typo, a missing colon or a wrong output format explains why no test passed".
 
 ## 4. The cron [EloRSL]
@@ -353,11 +353,11 @@ function useExamStatus(examId: string, options?: { onNotice?: (notice: Notice) =
 
 1. First request without `since`; keep `latestNoticeId` as the cursor.
 2. Poll every `LIMITS.pollIntervalMs` while `document.visibilityState === 'visible'`; poll at once when the tab becomes visible again; pause while hidden.
-3. Call `onNotice` once per new notice, in order, and advance the cursor to the newest notice received (not to `latestNoticeId`), so more than 50 new notices arrive over the next polls instead of being skipped. `onNotice` gets only the notices that arrive while its hook is mounted: a notice is a live event, not history. When several mounted hooks pass `onNotice` for the same exam, each of them gets every new notice once.
+3. Call `onNotice` once per new notice, in order, and advance the cursor to the newest notice received (not to `latestNoticeId`). When more than `LIMITS.noticesPerPoll` notices are new, the rest then arrive over the next polls instead of being skipped. `onNotice` gets only the notices that arrive while its hook is mounted: a notice is a live event, not history. When several mounted hooks pass `onNotice` for the same exam, each of them gets every new notice once.
 4. `serverOffsetMs` = `Date.parse(serverTime)` minus the midpoint of the request's send and receive times.
 5. `refresh()` refetches the same query at once; a poll already running is reused, not doubled.
 
-`useCountdown(closesAt, serverOffsetMs, onZero)` [timursic2] computes the time left from the browser clock plus `serverOffsetMs`, and calls `onZero` once when it reaches zero (again if `closesAt` later moves and it reaches zero again). The exam page passes `refresh` from `useExamStatus` as `onZero`, which gives the one extra status poll.
+`useCountdown(closesAt, serverOffsetMs, onZero)` [timursic2] computes the time left from the browser clock plus `serverOffsetMs`. It calls `onZero` once when the time left reaches zero, and again if `closesAt` later moves and the time left reaches zero again. The exam page passes `refresh` from `useExamStatus` as `onZero`, so the page polls the status once more at zero.
 
 ### Runner client [timursic2]: `apps/web/src/lib/runner/`
 
@@ -375,7 +375,7 @@ function useRunner(): Runner;            // one shared hidden iframe per page
 | `HiddenTestCheck` | `apps/web/src/modules/submissions/HiddenTestCheck.tsx` | tzuntar | `examId: string; onDone?: () => void` |
 | `DemoBanner` | `apps/web/src/lib/DemoBanner.tsx` | EloRSL | none |
 
-`HiddenTestCheck` loops until `remaining` is 0: `recheck.next`, run each item through `useRunner()` one at a time (one runner request per submission), cut stdout and stderr to `LIMITS.storedOutputBytes`, then `recheck.submit` for the batch. It shows "{done} of {total}". It starts on mount and stops on unmount.
+`HiddenTestCheck` runs the hidden-test check. It repeats these steps until `remaining` is 0: call `recheck.next`; run each item through `useRunner()` one at a time (one runner request per submission); cut stdout and stderr to `LIMITS.storedOutputBytes`; then call `recheck.submit` for the batch. It shows "{done} of {total}". It starts on mount and stops on unmount.
 
 ### Translations [EloRSL owns the files]
 
@@ -390,10 +390,10 @@ Translation keys are typed from `en.json`: a key that isn't in the files fails t
 The runner page is `{VITE_RUNNER_ORIGIN}/` in the hidden iframe (SEC-6, SEC-7).
 
 1. When its script has loaded, the runner page posts `{ type: 'ready', pyodideVersion }` to `window.parent` with `targetOrigin = VITE_APP_ORIGIN`.
-2. The page sends one `RunnerRequest` at a time and waits for its `result` or `error` before sending the next.
-3. The runner ignores any message whose `event.origin` isn't `VITE_APP_ORIGIN`. It answers a message that fails the `RunnerRequest` schema with `error` `BAD_REQUEST`.
+2. The app page sends one `RunnerRequest` at a time and waits for its `result` or `error` before sending the next.
+3. The runner page ignores any message whose `event.origin` isn't `VITE_APP_ORIGIN`. It answers a message that fails the `RunnerRequest` schema with `error` `BAD_REQUEST`.
 4. For each request, the runner page starts a **new** Web Worker, which loads Pyodide from the runner site.
-5. For each input, in order: the page starts a timer of `timeLimitMs`, and the Web Worker runs the code with a fresh globals dictionary and the input on standard input (EOF after the input). Interpreter start-up isn't timed.
+5. For each input, in order: the runner page starts a timer of `timeLimitMs`, and the Web Worker runs the code with a fresh globals dictionary and the input on standard input (EOF after the input). Interpreter start-up isn't timed.
 6. On timeout: terminate the Web Worker, return `{ stdout: '', stderr: '', exitCode: -1, timedOut: true, durationMs: timeLimitMs }` for that input, and start a new Web Worker for the remaining inputs.
 7. An uncaught exception gives `exitCode: 1` and the traceback in `stderr`. `SystemExit(n)` gives `exitCode: n`.
 8. After the last input, terminate the Web Worker and post `{ type: 'result', requestId, results }`.

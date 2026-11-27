@@ -4,7 +4,7 @@
 
 ## Decision
 
-The review module owns one score record per criterion per counted submission (`score_records`). A record is `suggested`, then `confirmed`, and it is released when `released_at` is set. Grades are calculated by the pure function `grade()` in `packages/core/src/grade.ts` whenever they are shown, and never stored.
+The review module owns one score record per criterion per counted submission (`score_records`). A record's state is `suggested`, then `confirmed`. The record is released when `released_at` is set. Grades are calculated by the pure function `grade()` in `packages/core/src/grade.ts` whenever they are shown, and are never stored.
 
 | State | Set by | Meaning |
 | --- | --- | --- |
@@ -14,22 +14,22 @@ The review module owns one score record per criterion per counted submission (`s
 
 ## Rules
 
-- **ADR3-1.** Every change of a record adds a `score_history` row in the same batch: old and new points, old and new state, who (null for AI or tests), when, note.
+- **ADR3-1.** Every change of a record adds a `score_history` row in the same batch: old and new points, old and new state, who made the change (null for AI or tests), when, and a note.
 - **ADR3-2.** A new suggestion never changes a confirmed record's `points` or `state`. It replaces only the suggestion columns and sets `new_suggestion`.
-- **ADR3-3.** `suggest` takes all suggestions of one submission in one call and writes them in one `db.batch()`, so a grading job stays under 10 D1 queries.
+- **ADR3-3.** `suggest` takes all suggestions of one submission in one call and writes them in one `db.batch()`, so a grading job uses at most 10 D1 queries.
 - **ADR3-4.** A record holds one suggestion in its own columns. Part 2's repeated grading will add a table; MUST NOT add one now.
-- **ADR3-5.** The "runs" criterion's points come only from `runsPoints` (`internal-interfaces.md`): all when every hidden test passes, 2/3 when at least one passes, 1/3 when none passes and the AI says `smallTypo`, otherwise 0, rounded down to 0.5. An empty program passes no test and earns 0: the grading job ignores `smallTypo` when the code is empty after trimming.
+- **ADR3-5.** The "runs" criterion's points come only from `runsPoints` (`internal-interfaces.md` section 2): all points when every hidden test passes, 2/3 when at least one passes, 1/3 when none passes and the AI says `smallTypo`, otherwise 0. The result is rounded down to a multiple of 0.5. An empty program passes no test and earns 0, because the grading job ignores `smallTypo` when the code is empty after trimming.
 - **ADR3-6.** Changing a released score sends that student `grade_changed` (ADR-005).
 - **ADR3-7.** `grade(input)` reads nothing and stores nothing. The results page, the review screen and the CSV export all call it.
 
 ## Do not build
 
-- A table per stage (suggestions, confirmed scores, released grades) owned by different people (rejected: copies drift, history spreads over three places).
+- A table per stage (suggestions, confirmed scores, released grades) owned by different people (rejected: the copies drift apart, and the history is spread over three places).
 - Stored grades updated on every change (rejected: one missed update after a task removal gives a wrong grade).
 
 ## Consequences
 
-- The score history and Part 2's "how often the professor keeps the AI's points" come from one table.
+- The score history and Part 2's measure of "how often the professor keeps the AI's points" both come from one table.
 - Grading (lukaazman) and review (bjaksic84) can't change the suggestion shape without Rok changing `types.md`.
 - Part 3 class statistics may add a stored summary later, filled from these records.
 

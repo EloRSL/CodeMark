@@ -1,3 +1,4 @@
+import { LIMITS } from '@codemark/contracts';
 import { stateOf } from '@codemark/core';
 import type { Hono } from 'hono';
 import type { AppEnv } from '../../http/context';
@@ -35,8 +36,8 @@ export function testRoutes(app: Hono<AppEnv>, jobHandlers: JobHandlers): void {
   implement(app, 'test.runJobs', async ({ db, env, now }) => {
     const examsClosed = await closeDueExams(db, now);
     let jobsRun = 0;
-    while (jobsRun < 100) {
-      const run = await runDueJobs(db, env, now, 100 - jobsRun, jobHandlers);
+    while (jobsRun < LIMITS.jobsPerTestRun) {
+      const run = await runDueJobs(db, env, now, LIMITS.jobsPerTestRun - jobsRun, jobHandlers);
       if (run === 0) break;
       jobsRun += run;
     }

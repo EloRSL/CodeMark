@@ -463,7 +463,7 @@ export async function closeDueExams(db: Db, now: number): Promise<number> {
         lte(sql`${exams.closesAt} + ${LIMITS.graceMs}`, now),
       ),
     )
-    .limit(10);
+    .limit(LIMITS.examsClosedPerCronRun);
   let closed = 0;
   for (const exam of due) {
     const result = await db

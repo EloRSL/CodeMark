@@ -1,6 +1,6 @@
 # Architecture
 
-This file fixes the stack, the components, the decisions D1 to D28, the limits, the security rules, the environments and the failure handling for Part 1. Interfaces are in `types.md`, `api.md` and `internal-interfaces.md`.
+This file fixes these things for Part 1: the components, the stack, the decisions D1 to D28, the limits, the environments and the deployment, the security rules, the capacity rules and the failure handling. The interfaces are in `types.md`, `api.md` and `internal-interfaces.md`.
 
 ## 1. Components
 
@@ -18,13 +18,13 @@ There are three deployed parts and three outside services.
 Facts every agent MUST respect:
 
 - **A-1.** Only requests to `/api/*` run the Worker (`run_worker_first = ["/api/*"]` in `wrangler.toml`). Every other path is a static asset. The app is a single-page app: unknown paths return `index.html` (`not_found_handling = "single-page-application"`).
-- **A-2.** The runner site is a different site from the app. In deployment the app is on `*.workers.dev` and the runner on `*.pages.dev`, which are separate entries in the Public Suffix List. Never move the runner onto `workers.dev` or under the app's origin.
+- **A-2.** The runner site is a different site from the app. In the deployment the app is on `*.workers.dev` and the runner site on `*.pages.dev`, which are separate entries in the Public Suffix List. Never move the runner site onto `workers.dev` or under the app's origin.
 - **A-3.** Student code runs only in the runner iframe: in the student's browser for public tests, in the professor's browser for the hidden-test check.
 - **A-4.** The API has six modules: `platform`, `accounts`, `exams`, `submissions`, `review`, `grading`. A module's service code may call only modules earlier in that list, always through their `index.ts`. Route handlers may call any module's `index.ts`. The cron and the job handlers are wired in `apps/api/src/app.ts`, the only file that imports every module.
 
 ## 2. Stack
 
-These are the only runtime dependencies allowed without Rok's approval (G16). EloRSL pins exact versions in milestone 1.
+These are the only runtime dependencies allowed without Rok's approval (G16). EloRSL pins their exact versions in M1.
 
 | Area | Use exactly | Notes |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ These are the only runtime dependencies allowed without Rok's approval (G16). El
 
 ## 3. Decisions
 
-Rok made these decisions. Build on them. MUST NOT work around one.
+Rok made these decisions. Build on them. MUST NOT work around any of them.
 
 | # | Decision |
 | --- | --- |
@@ -57,12 +57,12 @@ Rok made these decisions. Build on them. MUST NOT work around one.
 | D2 | One Cloudflare Worker on the free plan serves the app, the API and the cron. The runner is a static site on Cloudflare Pages, a different site from the app. |
 | D3 | Hono for the API, with routes grouped by module. |
 | D4 | D1 through Drizzle with SQL migrations, created in Western Europe. One Drizzle schema file per module. |
-| D5 | Sign-in only with Google or GitHub (OAuth). No passwords, because the free plan's 10 ms CPU can't hash them safely. Demo sign-in only while `DEMO_MODE` is `"true"`, and the app then shows a Demo banner. |
+| D5 | Sign-in only with Google or GitHub (OAuth). No passwords, because the free plan's 10 ms CPU limit is too little to hash them safely. Demo sign-in only while `DEMO_MODE` is `"true"`, and the app then shows a Demo banner. |
 | D6 | React with Vite, React Router, TanStack Query, Tailwind CSS with shadcn/ui. |
 | D7 | CodeMirror 6 with Python mode. Autocomplete follows the exam's `autocomplete` setting. |
 | D8 | The runner: an iframe from the runner site, Pyodide at one pinned version in a Web Worker, a new Web Worker with a fresh interpreter for every runner request, each test stopped at its time limit, and a CSP that allows connections only to the runner site. |
 | D9 | i18next with `sl.json` and `en.json`. The API returns error codes and the app translates them. CI fails on a missing key. Exam content stays in the professor's language. |
-| D10 | Workers AI through the `AI` binding. The quality test picks the model. The prompt asks for JSON; JSON mode is used only on models that support it. |
+| D10 | Workers AI through the `AI` binding. The quality test picks the model (ADR-006). The prompt asks for JSON; JSON mode is used only on models that support it. |
 | D11 | The browser polls the status endpoint every 60 seconds and pauses in hidden tabs. |
 | D12 | Grace period: 60 seconds after the closing time, the same for every exam. It is a rule for what counts as on time, not a state. |
 | D13 | Times are stored as UTC milliseconds, sent as ISO 8601 UTC strings, shown in Europe/Ljubljana time. |
@@ -71,14 +71,14 @@ Rok made these decisions. Build on them. MUST NOT work around one.
 | D16 | The limits in section 4. |
 | D17 | Slovenian scale: the professor sets the minimum points or percent for 6, 7, 8, 9 and 10. Below the 6 threshold the grade is 5. A grade never exceeds 10. |
 | D18 | CSV export: UTF-8 with a byte order mark, semicolon-separated, decimal comma. |
-| D19 | One GitHub monorepo with pnpm workspaces, short branches named `<github-name>/<topic>` (for example `timursic2/runner-timeouts`), squash merges, plain commit messages written like a person would (G19), CODEOWNERS. |
+| D19 | One GitHub monorepo with pnpm workspaces, one short branch per feature, named after its activity (for example `A22-runner-timeouts`, `conventions.md` section 12), squash merges, plain commit messages written like a person would (G19), CODEOWNERS. |
 | D20 | Vitest for unit and Worker tests, Playwright for the runner and the Gate 1 script. Both run in CI on every pull request. |
 | D21 | Hidden tests run only in the professor's browser after the exam closes, one submission at a time. |
 | D22 | An enrolment number is unique per exam and checked against the class list when one exists. The professor can correct any number. |
-| D23 | Rok leads the project and owns the GitHub repository (`EloRSL/CodeMark`) as its only admin; teammates are collaborators with write access. The Cloudflare account has two administrators, Rok and tzuntar, so the deployment never depends on one person. A database export after every release. |
+| D23 | Rok leads the project and owns the GitHub repository (`EloRSL/CodeMark`) as its only admin; teammates are collaborators with write access. The Cloudflare account has two administrators, Rok and tzuntar, so the deployment never depends on one person. The database is exported after every release. |
 | D24 | Three environments: local, CI, and one deployment from `main`, which is also the demo. |
 | D25 | A practice exam opens at its opening time and never closes. It is never checked or graded. |
-| D26 | The professor can change the closing time while the exam is Scheduled or Open. A closed exam can't be reopened. |
+| D26 | The professor can change the closing time while the exam is Draft, Scheduled or Open. A closed exam can't be reopened. |
 | D27 | The professor role goes only to emails in `PROFESSOR_EMAILS`. |
 | D28 | A receipt is the submission ID from the server, its arrival time and the SHA-256 of the code. |
 
@@ -100,6 +100,7 @@ All limits live in `LIMITS` in `packages/contracts/src/limits.ts` (G12). Names a
 | `storedOutputBytes` | 10240 | stdout and stderr kept per test; longer output is cut by the browser before sending |
 | `graceMs` | 60000 | D12 |
 | `pollIntervalMs` | 60000 | D11 |
+| `noticesPerPoll` | 50 | notices in one status response; the rest come with the next polls |
 | `recheckBatchSize` | 10 | submissions per hidden-test check batch |
 | `runnerInputsPerRequest` | 20 | inputs in one runner request |
 | `aiReasonChars` | 600 | |
@@ -108,12 +109,14 @@ All limits live in `LIMITS` in `packages/contracts/src/limits.ts` (G12). Names a
 | `jobMaxAttempts` | 5 | |
 | `jobRetryDelaysMs` | `[60000, 300000, 900000, 3600000]` | wait after attempts 1, 2, 3 and 4 |
 | `jobsPerCronRun` | 1 | |
+| `examsClosedPerCronRun` | 10 | exams one cron run closes; the rest close in the next runs |
+| `jobsPerTestRun` | 100 | jobs one `test.runJobs` call runs at most |
 | `jobLockMs` | 600000 | a running job's lock |
 | `sessionMs` | 1209600000 | 14 days |
 | `classListMax` | 2000 | enrolment numbers in one class list |
 | `reviewPageSize` | 50 | review queue items per page |
 
-The limits test (foundation task 10) ran on 2026-11-27 on a temporary copy of the Worker on the free plan, with a 512 KB exam. CPU times: saving it 9 to 36 ms, publishing it 10 to 22 ms, a new version 17 to 27 ms; a cron run with no job 4 to 5 ms, with one stand-in grading job 24 ms, with two 27 to 58 ms, about the same for a 25 KB exam. Cloudflare stopped none of them, but it allows a Worker to go over 10 ms only now and then and stops one that does so consistently. So `jobsPerCronRun` went from 2 to 1, and `versionBytes` stays, because a smaller exam saves barely faster (25 KB: 9 to 17 ms).
+The limits test (foundation task 10) ran on 2026-11-27 on a temporary copy of the Worker on the free plan, with a 512 KB exam. CPU times: saving the exam 9 to 36 ms, publishing it 10 to 22 ms, making a new version 17 to 27 ms. A cron run took 4 to 5 ms with no job, 24 ms with one stand-in grading job, and 27 to 58 ms with two. The times were about the same for a 25 KB exam. Cloudflare stopped none of these runs. But Cloudflare allows a Worker to go over 10 ms only now and then, and it stops a Worker that does so consistently. So `jobsPerCronRun` went from 2 to 1. `versionBytes` stays as it is, because a smaller exam saves barely faster (25 KB: 9 to 17 ms).
 
 ## 5. Environments and configuration
 
@@ -129,7 +132,7 @@ Worker variables and secrets. Names MUST be exactly these.
 | --- | --- | --- | --- |
 | `APP_ENV` | variable | `local`, `test`, `production` | test endpoints exist only when `test` |
 | `APP_ORIGIN` | variable | e.g. `http://localhost:5173` | Origin check, OAuth redirect URLs |
-| `RUNNER_ORIGIN` | variable | e.g. `http://localhost:5174` | not read by API code in Part 1; it keeps both origins in `wrangler.toml`, and the deploy workflow copies it into `VITE_RUNNER_ORIGIN` |
+| `RUNNER_ORIGIN` | variable | e.g. `http://localhost:5174` | not read by API code in Part 1. It is there so that `wrangler.toml` holds both origins, and the deploy workflow copies it into `VITE_RUNNER_ORIGIN` |
 | `DEMO_MODE` | variable | `"true"` or `"false"` | `POST /api/auth/demo` |
 | `AI_PROVIDER` | variable | `fake` or `workers-ai` | grading module |
 | `AI_MODEL` | variable | a Workers AI model ID, e.g. `@cf/qwen/qwen3-30b-a3b-fp8` | grading module |
@@ -162,13 +165,13 @@ Deployment names: Worker `codemark`, Pages project `codemark-runner`, D1 databas
 
 The deploy workflow runs these steps. When one fails, the ones after it don't run.
 
-1. Stop if a deploy credential or a variable below, other than `PROFESSOR_EMAILS`, is empty.
+1. Stop if a deploy credential or a variable in the table below, other than `PROFESSOR_EMAILS`, is empty.
 2. Build the app with `VITE_DEMO_MODE` and `VITE_RUNNER_ORIGIN`, and the runner site with `VITE_APP_ORIGIN`.
 3. Apply new migrations to `codemark-db` (`wrangler d1 migrations apply codemark-db --remote`).
 4. Deploy the Worker, passing every Worker variable as `--var`. `APP_ENV` is always `production`, so the test endpoints never exist there.
 5. Deploy the runner site (`wrangler pages deploy`).
 
-Migrations go live before the new Worker does. For a few seconds the old Worker runs against the new schema, and if step 4 fails it stays that way until the next deploy, so a migration the deployed code can't work with breaks the demo.
+Migrations go live before the new Worker does, so for a few seconds the old Worker runs against the new schema. If step 4 fails, the old Worker keeps running against the new schema until the next deploy. So a migration that the old Worker's code can't work with breaks the demo.
 
 | Name | Kind | Set in GitHub | Value now |
 | --- | --- | --- | --- |
@@ -182,10 +185,10 @@ Migrations go live before the new Worker does. For a few seconds the old Worker 
 | `CLOUDFLARE_API_TOKEN` | secret in the environment `production` | Settings → Environments → `production` | an account API token with Workers Scripts Edit, D1 Edit, Cloudflare Pages Edit and Account Settings Read |
 | `CLOUDFLARE_ACCOUNT_ID` | secret in the environment `production` | same | the team's Cloudflare account |
 
-- The `[vars]` in `apps/api/wrangler.toml` are only the local values; the deploy replaces every one. Rok changes a deployed value in the repository variable, and it takes effect at the next deploy.
-- Only `main` can use the environment `production`, so a workflow on another branch can't read the deploy credentials. If the token leaks, Rok rolls it (Cloudflare: Manage Account → Account API Tokens) and puts the new value in the environment.
-- The public Actions logs show every repository variable. `PROFESSOR_EMAILS` will hold real emails, so Rok decides how it's set before OAuth (M2).
-- Not there yet: the `AI` binding, added to `wrangler.toml` when grading calls Workers AI (`AI_PROVIDER` stays `fake` until then), and the OAuth secrets, which a Cloudflare administrator sets as Cloudflare secrets (`wrangler secret put`) when OAuth lands in M2.
+- The `[vars]` in `apps/api/wrangler.toml` are only the local values; the deploy replaces every one of them. To change a deployed value, Rok changes the repository variable, and the new value takes effect at the next deploy.
+- Only `main` can use the environment `production`, so a workflow on another branch can't read the deploy credentials. If the token leaks, Rok rolls it (Cloudflare: Manage Account → Account API Tokens) and puts the new token in the environment.
+- The public Actions logs show every repository variable. `PROFESSOR_EMAILS` will hold real emails, so Rok decides how to set it before OAuth lands (M2).
+- Not set up yet: the `AI` binding, which is added to `wrangler.toml` when grading calls Workers AI (grading task 5, M3; `AI_PROVIDER` stays `fake` until then), and the OAuth secrets, which a Cloudflare administrator sets as Cloudflare secrets (`wrangler secret put`) when OAuth lands in M2.
 - The deployment's database was seeded once, on 2026-11-21. A Cloudflare administrator seeds it from `apps/api` with `pnpm exec tsx seed/generate.ts`, then `pnpm exec wrangler d1 execute codemark-db --remote --file=seed/demo.sql`. The seed is plain `INSERT` statements, so running it again on a seeded database fails on the first existing row.
 
 ## 6. Security rules
@@ -194,14 +197,14 @@ tzuntar reviews every change that touches these rules.
 
 | ID | Rule |
 | --- | --- |
-| SEC-1 | No response to a student contains a hidden test's input or expected output. Hidden inputs go only to the exam's professor: in `GET /api/exams/{examId}/recheck`, the exam editor (`exams.get`) and the review screen (`review.submission`). Hidden expected outputs go only to the exam's professor, in the exam editor and the review screen. Public tests' expected outputs also go to the student in the student view (`StudentTestCase`), because the browser compares **Run public tests** (ADR-004). No expected output goes to the runner or the AI (SEC-2). Each endpoint has a test that asserts this for a student caller. |
+| SEC-1 | No response to a student contains a hidden test's input or expected output. Hidden inputs go only to the exam's professor: in the hidden-test check (`recheck.next`, `GET /api/exams/{examId}/recheck`), the exam editor (`exams.get`) and the review screen (`review.submission`). Hidden expected outputs go only to the exam's professor, in the exam editor and the review screen. Public tests' expected outputs also go to the student in the student view (`StudentTestCase`), because the browser compares the outputs of **Run public tests** (ADR-004). No expected output goes to the runner or the AI (SEC-2). Each endpoint has a test that asserts this for a student caller. |
 | SEC-2 | Expected outputs never go to the runner (no field for them in `RunnerRequest`) and never to the AI (no field in `GradingRequest`). |
 | SEC-3 | Every route's access and scope come from the endpoint registry and are checked by one helper, `checkAccess` in `accounts`, before the handler runs (G8). |
 | SEC-4 | Every request with method POST, PUT, PATCH or DELETE MUST carry an `Origin` header equal to `APP_ORIGIN`, or it gets `403 FORBIDDEN_ORIGIN`. |
 | SEC-5 | Session cookie: `__Host-session`, HttpOnly, Secure, SameSite=Lax, Path=/, Max-Age 14 days. Value: 32 random bytes, base64url. The database stores only its SHA-256 (hex). Logout deletes the row. The OAuth cookie is `__Host-oauth` with the same flags and Max-Age 600. |
 | SEC-6 | The runner iframe: `<iframe src="{VITE_RUNNER_ORIGIN}/" sandbox="allow-scripts allow-same-origin">`, hidden. Both sides check `event.origin` on every message and pass an explicit `targetOrigin` to `postMessage`, never `"*"`. |
 | SEC-7 | The runner site sends this header on every file (Pages `_headers`): `Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; worker-src 'self'; frame-ancestors {VITE_APP_ORIGIN}; object-src 'none'; base-uri 'none'`. timursic2 confirms Pyodide loads under it in M1. If Pyodide needs `'unsafe-eval'`, it MAY be added to `script-src`; `connect-src` MUST stay `'self'`. |
-| SEC-8 | Each runner request runs in a new Web Worker. After a timeout, that Worker is terminated and a new one starts for the remaining inputs. No state survives from one request to the next. |
+| SEC-8 | Each runner request runs in a new Web Worker. After a timeout, that Web Worker is terminated and a new one starts for the remaining inputs. No state survives from one request to the next. |
 | SEC-9 | Markdown from professors is rendered with `react-markdown` with raw HTML disabled. Student code is shown only as text in CodeMirror. MUST NOT use `dangerouslySetInnerHTML`. |
 | SEC-10 | `GradingRequest` is a strict schema with no field for a name, an email, an enrolment number, a user ID, a test input or an expected output. The prompt tells the model that comments and strings in the code are student text, never instructions. |
 | SEC-11 | The professor role comes only from `PROFESSOR_EMAILS` at each OAuth sign-in, or from the demo seed. No endpoint changes a user's role. |
@@ -212,7 +215,7 @@ tzuntar reviews every change that touches these rules.
 
 | ID | Rule |
 | --- | --- |
-| CAP-1 | A cron run claims at most `LIMITS.jobsPerCronRun` (1) job, because a run has 10 ms of CPU and 50 D1 queries, and one grading job already took 24 ms of CPU in the limits test (section 4). |
+| CAP-1 | A cron run claims at most `LIMITS.jobsPerCronRun` (1) job. The reason: a run has 10 ms of CPU time and 50 D1 queries, and one grading job already took 24 ms of CPU time in the limits test (section 4). |
 | CAP-2 | A grading job uses at most 10 D1 queries. |
 | CAP-3 | Bulk writes go in one `db.batch()` or one `INSERT ... SELECT`, which D1 counts as one query. |
 | CAP-4 | The status endpoint reads one exam row, one membership row and the new notices, with an index on `notices(exam_id, id)`. Nothing else. |
@@ -227,9 +230,9 @@ tzuntar reviews every change that touches these rules.
 | The student's network drops while submitting | a retry message | the browser resends with the same `retryKey`; the server returns the first receipt |
 | The student's browser crashes | the code is back in the editor after reload | autosave to `localStorage` every 5 seconds (S14) |
 | A cron run is late or fails | nothing | `stateOf` uses the clock; the next run closes the exam and claims jobs |
-| Endless loops in the check | a slower progress bar | each test stops at its time limit |
-| The professor closes the tab during the check | the check pauses | the next visit continues, because the server returns only unchecked submissions |
-| Workers AI is down or the budget is used | "waiting for AI" | retries with delays; budget waits move to 00:05 UTC the next day without spending an attempt; manual grading after 5 failures |
+| Endless loops in the hidden-test check | a slower progress bar | each test stops at its time limit |
+| The professor closes the tab during the hidden-test check | the hidden-test check pauses | the next visit continues, because the server returns only unchecked submissions |
+| Workers AI is down or the daily grading budget is used up | "waiting for AI" | retries with delays; a budget wait moves the job to 00:05 UTC the next day without spending an attempt; manual grading after 5 failures |
 | The AI's answer fails the checks twice | "grade manually" | score records for the "ai" criteria get no suggestion |
 | A D1 or request daily limit is reached | API errors until 00:00 UTC | prevented by CAP-1 to CAP-6 |
 | Data loss | missing records | D1 Time Travel (7 days) and an export after every release |

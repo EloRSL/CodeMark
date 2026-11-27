@@ -2,45 +2,45 @@
 
 Part 1 is the basic platform. It supports Python only, and no student code runs on our server: the server stores data, checks results and calls the AI. Part 1 is used only with demo and test users.
 
-Part 2 starts after M3 and ends at M6: a server sandbox for the hidden tests, AI drafts of rubrics and tests, and more reliable grading with the features marked "Part 2" in the last table. Rok writes its items, owners and role files by M3; until then nothing of it is built (SC-3). From M3 on, each member moves to their Part 2 items once all their Part 1 items are done. Fixes that Gate 1 needs always come first.
+Part 2 starts after M3 and ends at M6. It brings a server sandbox for the hidden tests, AI drafts of rubrics and tests, and more reliable grading, together with the features marked "Part 2" in the last table ("Not in Part 1"). Rok writes Part 2's items, owners and role files by M3; until then, nothing of Part 2 is built (SC-3). From M3 on, each member moves to their Part 2 items once all their Part 1 items are done. Fixes that Gate 1 needs always come first.
 
 Rules for this file:
 
-- **SC-1.** Build only the items in the table below. Every pull request names the scope IDs it implements.
+- **SC-1.** Build only the items in the tables under "Part 1 items" below. Every pull request names the scope IDs it implements.
 - **SC-2.** Core items come first. Don't start a non-Core item while one of your Core items is unfinished.
 - **SC-3.** MUST NOT build anything from the "Not in Part 1" list, not even partly or behind a flag. If a task seems to need one, stop and ask Rok.
 - **SC-4.** A new idea goes to Rok for Part 3 or a later list. It never goes into Part 1.
-- **SC-5.** After M1, a change the professor asks for goes in only if the professor takes out something of a similar size; otherwise it goes to Part 2 or Part 3. Rok writes each change down with its effect on the dates.
+- **SC-5.** After M1, a change the course professor asks for goes in only if the course professor takes out something of a similar size; otherwise it goes to Part 2 or Part 3. Rok writes each change down with its effect on the dates.
 
 ## Milestones
 
-| # | Milestone | Done when | Activities | Deliverables | Date |
-| --- | --- | --- | --- | --- | --- |
-| M1 | Start | The repository, demo sign-in and the deployment work. The limits test on the deployed free Worker has passed. `stateOf` and the AI fake exist. | A11, A12, A13 | IZ 11.1, IZ 12.1, IZ 12.2, IZ 13.1, IZ 13.2 | 2026-11-29 |
-| M2 | Connected | The Gate 1 script (`docs/gate1.md`) runs end to end as an automated test, with stand-ins where a part isn't built yet. | A21 | IZ 21.1 | 2026-12-06 |
-| M3 | Core | Every Core item works with the real parts, and the Gate 1 script passes with the AI fake. | A22, A23 | IZ 22.1, IZ 23.1, IZ 23.2 | 2026-12-15 |
-| M4 | Part 1 complete | Every other Part 1 item is done. | A24 | IZ 24.1 | 2026-12-18 |
-| M5 | Gate 1 | The Gate 1 script runs on the deployed platform with the real AI. | A25 | IZ 25.1 | 2026-12-23 |
-| M6 | Gate 2 and hand-in | Part 2 works, is frozen and handed in: the server sandbox gives the same results as the browser runner on the shared cases and runs the hidden-test check, the AI drafts rubrics and tests, and repeated grading warns when its suggestions disagree. | A31, A32, A33, A34 | IZ 31.1, IZ 32.1, IZ 33.1, IZ 34.1, IZ 34.2 | 2027-01-12 |
+| # | Milestone | Done when | Activities | Date |
+| --- | --- | --- | --- | --- |
+| M1 | Start | The repository, demo sign-in and the deployment work. The limits test on the deployed free Worker has passed. `stateOf` and the AI fake exist. | A11, A12, A13 | 2026-11-29 |
+| M2 | Connected | The Gate 1 script (`docs/gate1.md`) runs end to end as an automated test, with stand-ins where a part isn't built yet. | A21 | 2026-12-06 |
+| M3 | Core | Every Core item works with the real parts, and the Gate 1 script passes with the AI fake. | A22, A23 | 2026-12-15 |
+| M4 | Part 1 complete | Every other Part 1 item is done. | A24 | 2026-12-18 |
+| M5 | Gate 1 | The Gate 1 script runs on the deployed platform with the real AI. | A25 | 2026-12-23 |
+| M6 | Gate 2 and hand-in | Part 2 works, is frozen and handed in: the server sandbox gives the same results as the browser runner on the shared cases and runs the hidden-test check, the AI drafts rubrics and tests, and repeated grading warns when its suggestions disagree. | A31, A32, A33, A34 | 2027-01-12 |
 
-The activities (A) and deliverables (IZ) are those of the project plan. A0, project management, runs the whole time and delivers the plan (IZ 0.1) and the final report (IZ 0.2). Work for a milestone starts once Rok confirms the previous one is done; Part 2 is the exception above. The team takes a break from 24 December to 2 January.
+The activities (A) are those of the project plan. A0, project management, runs the whole time and ends with the final report. Work for a milestone starts once Rok confirms the previous one is done; Part 2 is the exception described above. The team takes a break from 24 December to 2 January.
 
-A scope item belongs to the activity of the milestone in its "By" column. At M3, the items under "The professor sets up an exam", "Students take the exam" and "Changes to the exam", and the accounts items, are A22; the items under "Hidden tests", "Grading after the deadline", "The professor reviews" and "Students see their results" are A23.
+A scope item belongs to the activity of the milestone in its "By" column. At M3, the items under "The professor sets up an exam", "Students take the exam" and "Changes to the exam", and the accounts items, are A22; the items under "Hidden tests", "Grading after the deadline", "The professor reviews" and "Students see their results" are A23. The M3 parts of S40 and S43 (the full demo data and the Gate 1 script with the real parts) are both A22 and A23, because they test the work of both.
 
-| Activity | Dates | Deliverables |
+| Activity | Dates | Delivers |
 | --- | --- | --- |
-| A11 Requirements and scope | 2026-11-03 to 2026-11-10 | IZ 11.1 the scope and the three-part plan (this file) |
-| A12 Architecture and interfaces | 2026-11-11 to 2026-11-19 | IZ 12.1 `architecture.md` and the ADRs, IZ 12.2 `api.md`, `types.md` and `conventions.md` |
-| A13 Project setup and foundations | 2026-11-20 to 2026-11-27 | IZ 13.1 the repository with CI and deployment, IZ 13.2 the limits test report (`architecture.md` section 4) |
-| A21 Connected system with stand-ins | 2026-11-30 to 2026-12-04 | IZ 21.1 `e2e/gate1.spec.ts` |
-| A22 Exam setup and taking the exam | 2026-12-07 to 2026-12-15 | IZ 22.1 the working exam setup and exam page |
-| A23 Grading, review and results | 2026-12-07 to 2026-12-15 | IZ 23.1 the working grading, review and results; IZ 23.2 `docs/ai-quality.md` |
-| A24 Finishing Part 1 | 2026-12-16 to 2026-12-18 | IZ 24.1 Part 1 with the README |
-| A25 Gate 1 | 2026-12-21 to 2026-12-23 | IZ 25.1 the Gate 1 run on the deployment |
-| A31 Server sandbox | 2026-12-16 to 2027-01-08, without the break | IZ 31.1 the sandbox for the hidden tests |
-| A32 AI help with exam setup | 2026-12-16 to 2027-01-08, without the break | IZ 32.1 AI drafts of rubrics and tests |
-| A33 More reliable grading and the other Part 2 features | 2026-12-16 to 2027-01-08, without the break | IZ 33.1 repeated grading and the Part 2 features |
-| A34 Gate 2 and hand-in | 2027-01-11 to 2027-01-12 | IZ 34.1 the final docs and guides, IZ 34.2 the presentation and demo |
+| A11 Requirements and scope | 2026-11-03 to 2026-11-10 | the scope and the three-part plan (this file) |
+| A12 Architecture and interfaces | 2026-11-11 to 2026-11-19 | `architecture.md` and the ADRs, `api.md`, `types.md` and `conventions.md` |
+| A13 Project setup and foundations | 2026-11-20 to 2026-11-27 | the repository with CI and deployment, the limits test report (`architecture.md` section 4) |
+| A21 Connected system with stand-ins | 2026-11-30 to 2026-12-04 | `e2e/gate1.spec.ts` |
+| A22 Exam setup and taking the exam | 2026-12-07 to 2026-12-15 | the working exam setup and exam page |
+| A23 Grading, review and results | 2026-12-07 to 2026-12-15 | the working grading, review and results; `docs/ai-quality.md` |
+| A24 Finishing Part 1 | 2026-12-16 to 2026-12-18 | Part 1 with the README |
+| A25 Gate 1 | 2026-12-21 to 2026-12-23 | the Gate 1 run on the deployment |
+| A31 Server sandbox | 2026-12-16 to 2027-01-08, without the break | the sandbox for the hidden tests |
+| A32 AI help with exam setup | 2026-12-16 to 2027-01-08, without the break | AI drafts of rubrics and tests |
+| A33 More reliable grading and the other Part 2 features | 2026-12-16 to 2027-01-08, without the break | repeated grading and the Part 2 features |
+| A34 Gate 2 and hand-in | 2027-01-11 to 2027-01-12 | the final docs and guides, the presentation and demo |
 
 If time runs short, Part 1's non-Core items that missed M4 come before any Part 2 work in January. Gate 1 needs only Core items. Gate 2 needs only the sandbox, the AI drafts and repeated grading with its warning, so the other Part 2 features are the first to go.
 
@@ -78,7 +78,7 @@ If time runs short, Part 1's non-Core items that missed M4 come before any Part 
 | S14 | | The browser saves the editor's code every 5 seconds, so a crash or refresh doesn't lose it. | timursic2 | | M4 |
 | S15 | Core | **Run public tests** runs the public tests in the runner. The page says these results don't decide the grade. | timursic2 | | M3 |
 | S16 | Core | **Submit for grading** asks for confirmation, then shows "Submitted at HH:MM" and the receipt: submission ID and SHA-256 of the code. | timursic2 | tzuntar (endpoint) | M3 |
-| S17 | Core | A countdown on the server's time shows the time left. The page warns when the editor's code differs from the last submission. | timursic2 | | M3 |
+| S17 | Core | A countdown based on the server's time shows the time left. The page warns when the editor's code differs from the last submission. | timursic2 | | M3 |
 | S18 | Core | The server records each submission's arrival time by its own clock, with a 60-second grace period the page doesn't show. Later work is stored, marked late, and the professor accepts or rejects it. | tzuntar | | M3 |
 | S19 | Core | Only submitted code counts. The counted submission is the latest accepted late one, otherwise the latest on-time one. | tzuntar | | M3 |
 
@@ -88,7 +88,7 @@ If time runs short, Part 1's non-Core items that missed M4 come before any Part 
 | --- | --- | --- | --- | --- | --- |
 | S20 | Core | On submit, the server stores the code with its hash and arrival time before replying. The student gets the receipt and nothing else. | tzuntar | | M3 |
 | S21 | Core | Students never receive a hidden test's input or expected output. Expected outputs never go to the runner or the AI. Each endpoint has a test for this (SEC-1). | tzuntar | everyone | M3 |
-| S22 | Core | After the exam closes, the professor's review page runs every counted submission against the final version's hidden tests in the runner, one submission at a time, each in a fresh interpreter with no network access and a time limit per test. If the page closes, the next visit continues where it stopped. | tzuntar | timursic2 (runner), bjaksic84 (screen) | M3 |
+| S22 | Core | After the exam closes, the professor's review screen runs every counted submission against the final version's hidden tests in the runner, one submission at a time, each in a fresh interpreter with no network access and a time limit per test. If the page closes, the next visit continues where it stopped. | tzuntar | timursic2 (runner), bjaksic84 (screen) | M3 |
 | S23 | Core | The server compares outputs with the comparison rule, stores pass or fail with the exam version, and students see the results only after the release. | tzuntar | timursic2 (rule) | M3 |
 
 ### Changes to the exam
@@ -104,7 +104,7 @@ If time runs short, Part 1's non-Core items that missed M4 come before any Part 
 
 | ID | Core | Item | Owner | With | By |
 | --- | --- | --- | --- | --- | --- |
-| S28 | Core | Each counted submission is sent to the AI with the task, the "ai" criteria, the numbered code and the check summary. Never a name, an enrolment number, a user ID, a test input or an expected output. | lukaazman | | M3 |
+| S28 | Core | Each counted submission is sent to the AI with the task, the "ai" criteria, the numbered code and the check summary. The AI never gets a name, an enrolment number, a user ID, a test input or an expected output. | lukaazman | | M3 |
 | S29 | Core | The "runs" criterion gets its points from the hidden tests (`runsPoints`). For the other criteria, the AI suggests points and a reason, quoting the code, even if the code doesn't compile. | lukaazman | | M3 |
 | S30 | Core | If the AI is down or the daily budget is used, grading waits and continues later. | lukaazman | EloRSL (jobs) | M3 |
 
@@ -112,7 +112,7 @@ If time runs short, Part 1's non-Core items that missed M4 come before any Part 
 
 | ID | Core | Item | Owner | With | By |
 | --- | --- | --- | --- | --- | --- |
-| S31 | | During the exam, the professor sees who has submitted, including late work, and accepts or rejects late submissions. | tzuntar | | M4 |
+| S31 | | During and after the exam, the professor sees who has submitted, including late work, and accepts or rejects late submissions. | tzuntar | | M4 |
 | S32 | Core | When the review screen opens after the exam, the hidden-test check starts on its own and shows progress. Submissions not checked yet are marked. | tzuntar | bjaksic84 (screen) | M3 |
 | S33 | Core | The review screen shows the student's code with the AI's quoted lines highlighted, next to the suggested points and reasons. | bjaksic84 | | M3 |
 | S34 | Core | The professor confirms or changes each score, or accepts all of one submission's scores, then jumps to the next submission. A filter shows what still needs review. | bjaksic84 | | M3 |
@@ -131,9 +131,9 @@ If time runs short, Part 1's non-Core items that missed M4 come before any Part 
 
 | ID | Core | Item | Owner | With | By |
 | --- | --- | --- | --- | --- | --- |
-| S40 | Core | Demo accounts and demo data (`docs/demo-data.md`). The demo professor creates an exam, the demo students submit, and setting the closing time to now starts the check and the grading. | EloRSL | everyone (fixtures) | M1 (accounts), M3 (data) |
+| S40 | Core | Demo accounts and demo data (`docs/demo-data.md`). The demo professor creates an exam, the demo students submit, and setting the closing time to now closes the exam; opening the review screen then starts the hidden-test check and the grading. | EloRSL | everyone (fixtures) | M1 (accounts), M3 (data) |
 | S41 | Core | A README with setup steps, the demo accounts and a walk-through of one whole exam. It says that hidden tests run in the professor's browser until Part 2, that the platform assumes a supervised exam, and that Part 1 is for demo and test users only. Each person writes their own section. | EloRSL | everyone | M4 |
-| S42 | | Part 2 only changes where the hidden tests run. Submissions, arrival times, comparison and grading MUST work unchanged when a server runner replaces the browser runner. | everyone | | always |
+| S42 | | For the hidden tests, Part 2 changes only where they run. Submissions, arrival times, comparison and grading MUST work unchanged when a server runner replaces the browser runner. | everyone | | always |
 | S43 | Core | The Gate 1 script runs as an automated Playwright test with the AI fake and the fake clock (`docs/gate1.md`). | EloRSL | everyone | M2 (stand-ins), M3 (real parts) |
 
 ## Not in Part 1: MUST NOT build
