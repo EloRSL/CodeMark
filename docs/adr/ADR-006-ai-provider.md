@@ -1,14 +1,14 @@
 # ADR-006: The AI provider interface and its fake
 
-**Status:** Accepted · **Owner:** lukaazman · **Affects:** EloRSL, bjaksic84
+**Status:** Accepted · **Owner:** lukaazman · **Affects:** EloRSL, bjaksic84, tzuntar
 
 ## Decision
 
-The grading module calls the AI only through `AiProvider.suggestScores(request)` (`types.md`). `AI_PROVIDER` picks the implementation: `fake` everywhere except the deployment, `workers-ai` on the deployment. Every answer from any implementation goes through `checkGradingAnswer` (`internal-interfaces.md`).
+The grading module calls the AI only through `AiProvider.suggestScores(request)` (`types.md`). `AI_PROVIDER` picks the implementation: `fake` everywhere except the deployment and tzuntar's quality-test runs, which use `workers-ai`. Every answer from any implementation goes through `checkGradingAnswer` (`internal-interfaces.md`).
 
 | Implementation | Used in | Behaviour |
 | --- | --- | --- |
-| Workers AI | the deployment | builds the prompt, asks for JSON (JSON mode only where the model supports it), one retry with the error attached |
+| Workers AI | the deployment, the quality-test runs | builds the prompt, asks for JSON (JSON mode only where the model supports it), one retry with the error attached |
 | Fake | local, CI, the Gate 1 test | fixed rules in `internal-interfaces.md` section 3: full points when all hidden tests pass, half (rounded down to 0.5) otherwise, a quote of the first non-empty line, `smallTypo` when no test passed |
 
 ## Rules
@@ -29,6 +29,10 @@ The quality test (20 to 30 sample solutions: good, buggy, not compiling; a few w
 4. No injected comment changes a score.
 5. Fewer than 5% of answers fail the checks twice.
 
+The samples and the scores are in `apps/api/src/modules/grading/quality/`. The two raters are lukaazman and bjaksic84. A sample's "Runs" score counts in its total (bar 3) but not in bars 1 and 2, where a score fixed by `runsPoints` would make every model look better.
+
+lukaazman writes the script that runs every sample through the Workers AI provider and `checkGradingAnswer` for one candidate at a time, and tests it with the fake. tzuntar runs it against Workers AI with his Cloudflare login, once per candidate, on a UTC day with no grading on the deployment: its Neurons come from the same daily quota (`LIMITS.aiDailyNeuronQuota`) but aren't in `ai_requests`, so the budget wait (ADR6-5) can't see them. The script stops once a run has used `LIMITS.aiDailyGradingBudget` Neurons, and tzuntar continues on the next UTC day. He gives the output to lukaazman.
+
 Results, including real tokens per grading, go in `docs/ai-quality.md`. Rok sets `AI_MODEL` from them. Groq is a possible fallback behind the same interface, only after lukaazman checks its data terms and Rok approves.
 
 ## Do not build
@@ -47,6 +51,8 @@ Results, including real tokens per grading, go in `docs/ai-quality.md`. Rok sets
 | Item | Who | By |
 | --- | --- | --- |
 | The fake provider, `checkGradingAnswer`, `runsPoints`, `buildCheckSummary` | lukaazman | M1 |
-| The quality test and `docs/ai-quality.md` | lukaazman | M3 |
-| Fake as default in local and CI; `AI_PROVIDER=workers-ai` only on the deployment | EloRSL | M1 |
+| The quality-test samples, script and `docs/ai-quality.md` | lukaazman | M3 |
+| Rater B's scores and the agreed reference scores | bjaksic84, with lukaazman | M3 |
+| The quality-test runs against Workers AI | tzuntar | M3 |
+| Fake as default in local and CI; `AI_PROVIDER=workers-ai` only in the deployment's config | EloRSL | M1 |
 | Score records built against `ScoreSuggestion` | bjaksic84 | M2 |

@@ -3,12 +3,9 @@ import { createDb } from './db/client';
 import { runDueJobs, type JobHandlers } from './modules/platform';
 import { clock } from './platform/clock';
 import { closeDueExams } from './modules/exams';
+import { gradeSubmissionJob } from './modules/grading';
 
-// shortcut: stand-in that marks every grading job done, until lukaazman exports
-// grading.gradeSubmissionJob (foundation.md, "You use"); then it goes here.
-export const jobHandlers: JobHandlers = {
-  'grade.submission': { run: async () => ({ kind: 'done' }) },
-};
+export const jobHandlers: JobHandlers = { 'grade.submission': gradeSubmissionJob };
 
 /** The cron, every minute (internal-interfaces.md section 4). */
 export async function scheduled(_event: ScheduledController, env: Env): Promise<void> {

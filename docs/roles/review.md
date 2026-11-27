@@ -21,6 +21,7 @@
 | `suggest` with every rule in ADR-003 | lukaazman | M2 |
 | `getConfirmedScores` | butarca (CSV) | M2 |
 | `scoreRecordExamId` (the scope resolver, wired in `app.ts`) | EloRSL (access checks) | M2 |
+| Rater B's scores for the quality test (ADR-006) | lukaazman | M3 |
 
 ## You use
 
@@ -49,10 +50,11 @@
 4. Review screen (S32, S33, S34): `HiddenTestCheck` at the top, then the queue with filters; per submission: code with quoted lines highlighted, each criterion with suggested points, reason, flag, confirm or change with comment, "Accept all", "Next".
 5. Release button with the not-ready counts from `RELEASE_NOT_READY` (S36).
 6. Results page (S38): per task the check (passed of total), per criterion points, reason and comment, total, percent, grade, and the label "Suggested by AI, confirmed by your professor".
+7. Score the quality-test samples as rater B (`apps/api/src/modules/grading/quality/`, ADR-006) without looking at lukaazman's scores, then agree the reference scores with him.
 
 ### M4, by 2026-12-23
 
-7. Source labels (AI, tests, professor) and the history list (S35).
+8. Source labels (AI, tests, professor) and the history list (S35).
 
 ## Tests you write
 
