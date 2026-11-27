@@ -69,7 +69,8 @@ These apply to every change, in every module.
 
 ```text
 CodeMark/
-  AGENTS.md, CLAUDE.md     local AI agent instructions; not in git (section 10)
+  AGENTS.md                instructions every AI agent reads before a task (section 10)
+  CLAUDE.md                local, not in git: points Claude Code to AGENTS.md (section 10)
   apps/
     web/                   React app (Vite); src/modules/<module>/ for each area
     api/                   Cloudflare Worker (Hono); src/modules/<module>/ for each area:
@@ -151,17 +152,16 @@ These commands exist since M1. Run them from the repository root. They work the 
 
 ## 10. What is not in git
 
-AI agent instructions stay on each person's computer and are listed in `.gitignore`:
+Personal AI agent files stay on each person's computer and are listed in `.gitignore`:
 
 ```gitignore
-# AI agent instructions (local only)
-AGENTS.md
+# Personal AI agent files (local only)
 CLAUDE.md
 CLAUDE.local.md
 .claude/
 ```
 
-Everything in `docs/` is planning and system design, and it is committed. Rok sends the current `AGENTS.md` and `CLAUDE.md` to the team, and each person copies them into the root of their clone. These two files hold no rules of their own: every rule is in `docs/`, so a change to the rules is a normal commit.
+Everything in `docs/` is planning and system design, and it is committed. So is `AGENTS.md` in the repository root, the instructions for AI agents: if you work with an AI agent, it MUST read `AGENTS.md` before it starts any task. Only Rok changes `AGENTS.md`, as with the docs. `CLAUDE.md` stays local: it only points Claude Code to `AGENTS.md`, and Rok sends it to the team. These two files hold no rules of their own: every rule is in `docs/`, so a change to the rules is a normal commit.
 
 ## 11. Role logs (G20)
 
@@ -208,7 +208,7 @@ Newest entry first in its section, one entry per item, at most five lines per en
 
 1. Install Node 22 or newer (CI uses 26) and pnpm 10.34.9 with `npm install -g pnpm@10.34.9`. The root `package.json` pins this pnpm version.
 2. Accept the GitHub invitation (from the email, or at `https://github.com/EloRSL/CodeMark/invitations`), then clone with `git clone https://github.com/EloRSL/CodeMark.git`.
-3. Copy `AGENTS.md` and `CLAUDE.md` from Rok into the root of the clone (section 10).
+3. `AGENTS.md` comes with the clone; any AI agent you use MUST read it before it starts a task. If you use Claude Code, also copy `CLAUDE.md` from Rok into the root of the clone (section 10).
 4. Run `pnpm install`, `pnpm db:reset` and `pnpm dev`, then open `http://localhost:5173`. The sign-in page has a button for each demo account.
 5. You need no `wrangler login`, no Cloudflare account and no `.dev.vars`: local work uses a local database and the AI fake. Nothing goes in `.dev.vars` before OAuth (M2).
 6. Run `pnpm db:reset` again after you pull a new migration (`apps/api/drizzle/`) or a change to the seed (`apps/api/seed/`).

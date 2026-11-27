@@ -4,6 +4,8 @@
 
 **Read first:** `conventions.md`, `glossary.md`, `data-model.md` (submissions), `types.md` (`api/submissions.ts`, `runner.ts`), `api.md` (#20 to #25), `internal-interfaces.md` (section 2 `compare.ts` and `hash.ts`; section 3 submissions; section 5 `HiddenTestCheck`; section 6), `flows.md` (sections 6, 7, 8), ADR-004, ADR-002, ADR-006 (the quality test), `architecture.md` section 6.
 
+**AI agents:** if you work with an AI agent, it MUST read `AGENTS.md` in the repository root before it starts any task (`conventions.md` section 10).
+
 ## You own
 
 | Kind | What |

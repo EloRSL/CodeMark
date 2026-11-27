@@ -4,6 +4,8 @@
 
 **Read first:** `conventions.md`, `glossary.md`, `data-model.md` (`ai_requests`, `score_records`), `types.md` (`ai.ts`, `api/grading.ts`, `api/review.ts`), `api.md` (#26, #27), `internal-interfaces.md` (section 2 `grading.ts`; section 3 grading, and the jobs part of platform), `flows.md` (section 7), ADR-006, ADR-003, ADR-005.
 
+**AI agents:** if you work with an AI agent, it MUST read `AGENTS.md` in the repository root before it starts any task (`conventions.md` section 10).
+
 ## You own
 
 | Kind | What |

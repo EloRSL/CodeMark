@@ -4,11 +4,13 @@
 
 **Read first:** `conventions.md`, `glossary.md`, `architecture.md`, `data-model.md` (accounts, platform), `types.md`, `api.md` (#1 to #10, T1, T2), `internal-interfaces.md` (section 1; section 3 platform and accounts; section 4; section 5), ADR-001, ADR-005, `gate1.md`, `demo-data.md`.
 
+**AI agents:** if you work with an AI agent, it MUST read `AGENTS.md` in the repository root before it starts any task (`conventions.md` section 10).
+
 ## You own
 
 | Kind | What |
 | --- | --- |
-| Repository | root config, `pnpm-workspace.yaml`, the root `package.json` scripts listed in `conventions.md` section 7, `.gitignore` (with the AI agent lines from `conventions.md` section 10), `.github/` (CI, deploy, CODEOWNERS), `README.md` (structure and your sections) |
+| Repository | root config, `pnpm-workspace.yaml`, the root `package.json` scripts listed in `conventions.md` section 7, `.gitignore` (with the AI agent lines from `conventions.md` section 10), `.github/` (CI, deploy, CODEOWNERS), `AGENTS.md`, `README.md` (structure and your sections) |
 | Packages | `packages/contracts` (you keep it equal to `types.md` and `api.md`; only Rok changes those two docs), `packages/core/src/demo/` |
 | API | `apps/api/src/http/`, `apps/api/src/db/`, `apps/api/src/app.ts`, `apps/api/src/scheduled.ts`, `apps/api/src/platform/clock.ts`, `apps/api/src/modules/accounts/`, `apps/api/src/modules/platform/`, `apps/api/seed/` |
 | Web | `apps/web/src/lib/` (except `runner/` and `editor/`), `apps/web/src/modules/accounts/`, `apps/web/src/i18n/` (you own the files; other roles add their own keys), the app shell, routing, the sign-in page, the Demo banner |

@@ -4,6 +4,8 @@
 
 **Read first:** `conventions.md`, `glossary.md`, `data-model.md` (`score_records`, `score_history`), `types.md` (`api/review.ts`), `api.md` (#28 to #33), `internal-interfaces.md` (section 3 review; section 5), `flows.md` (sections 7, 8, 9), ADR-003, ADR-002.
 
+**AI agents:** if you work with an AI agent, it MUST read `AGENTS.md` in the repository root before it starts any task (`conventions.md` section 10).
+
 ## You own
 
 | Kind | What |

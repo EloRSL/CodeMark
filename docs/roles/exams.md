@@ -4,6 +4,8 @@
 
 **Read first:** `conventions.md`, `glossary.md`, `data-model.md` (exams), `types.md` (`exam.ts`, `examContent.ts`, `api/exams.ts`), `api.md` (#11 to #19), `internal-interfaces.md` (section 2 `lifecycle.ts`, `grade.ts` and `studentView.ts`; section 3 exams), `flows.md` (sections 1, 2, 4, 5, 9, 10), ADR-002, ADR-003.
 
+**AI agents:** if you work with an AI agent, it MUST read `AGENTS.md` in the repository root before it starts any task (`conventions.md` section 10).
+
 ## You own
 
 | Kind | What |
