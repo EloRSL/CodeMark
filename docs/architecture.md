@@ -40,7 +40,7 @@ These are the only runtime dependencies allowed without Rok's approval (G16). El
 | Styling | `tailwindcss`, shadcn/ui components (copied into `apps/web/src/components/ui/`), and whatever the shadcn CLI installs for a component we add (for example `cn`, `radix-ui`, `class-variance-authority`, `lucide-react`, `tw-animate-css`, `shadcn`) | add components only with the shadcn CLI; its own installs are approved and listed in the pull request, nothing else |
 | Markdown | `react-markdown` | raw HTML stays disabled (SEC-9) |
 | Translations | `i18next`, `react-i18next` | `sl.json`, `en.json` |
-| Editor | CodeMirror 6: `codemirror`, `@codemirror/lang-python`, `@codemirror/autocomplete` | |
+| Editor | CodeMirror 6: `codemirror`, `@codemirror/lang-python`, `@codemirror/autocomplete`, `@codemirror/state`, `@codemirror/view` | `state` and `view` for the read-only mode with highlighted lines; pin the versions `codemirror` installs, so only one copy of each is installed |
 | Python in the browser | `pyodide`, one pinned version | files served from the runner site, never from a CDN |
 | Unit and Worker tests | `vitest`, `@cloudflare/vitest-plugin` | the renamed successor of `@cloudflare/vitest-pool-workers`, which is deprecated; use the `vitest` version it supports |
 | Browser tests | `@playwright/test` | Chromium |
