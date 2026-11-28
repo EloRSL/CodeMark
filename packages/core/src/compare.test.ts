@@ -1,9 +1,21 @@
-import type { RunResult } from '@codemark/contracts';
+import { LIMITS, type RunResult } from '@codemark/contracts';
 import { describe, expect, it } from 'vitest';
 import { normalizeOutput, outputsMatch, testPassed } from './compare';
 import cases from './compare.cases.json';
 
 describe('normalizeOutput', () => {
+  it('normalizes long runs of whitespace quickly', () => {
+    for (const text of [
+      ' '.repeat(LIMITS.storedOutputBytes - 1) + 'x',
+      '\n'.repeat(LIMITS.storedOutputBytes - 1) + 'x',
+    ]) {
+      const start = performance.now();
+
+      expect(normalizeOutput(text)).toBe(text);
+      expect(performance.now() - start).toBeLessThan(20);
+    }
+  });
+
   it('normalizes line endings and trailing whitespace', () => {
     expect(normalizeOutput('Hello  \r\nWorld\t\r\n\r\n')).toBe('Hello\nWorld');
   });
