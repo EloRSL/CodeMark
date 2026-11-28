@@ -4,3 +4,4 @@ export * from './hash';
 export * from './lifecycle';
 export * from './grade';
 export * from './studentView';
+export * from './compare';
