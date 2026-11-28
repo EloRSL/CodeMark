@@ -1,0 +1,122 @@
+[
+  {
+    "name": "identical output",
+    "expected": "Hello",
+    "actual": "Hello",
+    "match": true
+  },
+  {
+    "name": "Windows line endings",
+    "expected": "a\nb",
+    "actual": "a\r\nb",
+    "match": true
+  },
+  {
+    "name": "carriage return line endings",
+    "expected": "a\nb",
+    "actual": "a\rb",
+    "match": true
+  },
+  {
+    "name": "trailing spaces",
+    "expected": "Hello",
+    "actual": "Hello   ",
+    "match": true
+  },
+  {
+    "name": "trailing tabs",
+    "expected": "Hello",
+    "actual": "Hello\t\t",
+    "match": true
+  },
+  {
+    "name": "trailing whitespace on multiple lines",
+    "expected": "a\nb",
+    "actual": "a  \nb\t",
+    "match": true
+  },
+  {
+    "name": "trailing empty lines",
+    "expected": "Hello",
+    "actual": "Hello\n\n\n",
+    "match": true
+  },
+  {
+    "name": "trailing whitespace-only lines",
+    "expected": "Hello",
+    "actual": "Hello\n  \n\t\n",
+    "match": true
+  },
+  {
+    "name": "leading empty lines count",
+    "expected": "Hello",
+    "actual": "\nHello",
+    "match": false
+  },
+  {
+    "name": "leading spaces count",
+    "expected": "Hello",
+    "actual": " Hello",
+    "match": false
+  },
+  {
+    "name": "inner spaces count",
+    "expected": "Hello World",
+    "actual": "Hello  World",
+    "match": false
+  },
+  {
+    "name": "inner empty lines count",
+    "expected": "a\nb",
+    "actual": "a\n\nb",
+    "match": false
+  },
+  {
+    "name": "letter case counts",
+    "expected": "Hello",
+    "actual": "hello",
+    "match": false
+  },
+  {
+    "name": "both outputs empty",
+    "expected": "",
+    "actual": "",
+    "match": true
+  },
+  {
+    "name": "whitespace-only output",
+    "expected": "",
+    "actual": " \t\n\n",
+    "match": true
+  },
+  {
+    "name": "missing output",
+    "expected": "Hello",
+    "actual": "",
+    "match": false
+  },
+  {
+    "name": "non-English characters",
+    "expected": "čšž",
+    "actual": "čšž\n",
+    "match": true
+  },
+  {
+    "name": "different Unicode characters",
+    "expected": "čšž",
+    "actual": "csz",
+    "match": false
+  },
+  {
+    "name": "numbers are compared as text",
+    "expected": "5.0",
+    "actual": "5",
+    "match": false
+  },
+  {
+    "name": "different output",
+    "expected": "42",
+    "actual": "43",
+    "match": false
+  }
+]
