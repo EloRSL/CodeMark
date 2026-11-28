@@ -4,7 +4,11 @@ What the student exam page, editor and runner code adds to the docs, and where i
 
 ## Added
 
-Nothing yet.
+### Runner client recovery
+- Docs: `internal-interfaces.md` sections 5 and 6.
+- Code: the client waits for the iframe ready message without a startup deadline.
+- Why: the iframe startup timeout is not specified and needs agreement with Rok.
+- Added: 2026-11-28, pending review.
 
 ## Changed
 
