@@ -72,6 +72,9 @@ catalogs:
     prettier:
       specifier: 3.10.1
       version: 3.10.1
+    pyodide:
+      specifier: 314.0.8
+      version: 314.0.8
     radix-ui:
       specifier: 1.8.1
       version: 1.8.1
@@ -185,6 +188,13 @@ importers:
         version: 4.165.0(@types/node@22.20.5)(vitest@5.1.1(@types/node@22.20.5)(jsdom@31.0.1)(vite@8.3.8(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))
 
   apps/runner:
+    dependencies:
+      '@codemark/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      pyodide:
+        specifier: 'catalog:'
+        version: 314.0.8
     devDependencies:
       typescript:
         specifier: 'catalog:'
@@ -280,6 +290,9 @@ importers:
 
   e2e:
     devDependencies:
+      '@codemark/contracts':
+        specifier: workspace:*
+        version: link:../packages/contracts
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.65.1
@@ -2268,6 +2281,9 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
+  '@types/emscripten@1.41.6':
+    resolution: {integrity: sha512-uN+9i8bFT5CUcZfyIEYDrSueACEyKGbUs5kC/72DGlZZoinh84sJfVV0i8UOJD1asdzkvLPBRrKs41kZ8MdEXg==}
+
   '@types/esrecurse@4.3.1':
     resolution: {integrity: sha512-xJBAbDifo5hpffDBuHl0Y8ywswbiAp/Wi7Y/GtAgSlZyIABppyurxVueOPE8LUQOxdlgi6Zqce7uoEpqNTeiUw==}
 
@@ -3775,6 +3791,10 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
+
+  pyodide@314.0.8:
+    resolution: {integrity: sha512-74Wq1kXOC+CCEzAfxuRAO701nAcCMLjf8NrwvWpu8S41dVMXwXmLQ05dYB+F4e46AdnGo0oq7YHSVUpHsoarLQ==}
+    engines: {node: '>=18.0.0'}
 
   qified@0.10.1:
     resolution: {integrity: sha512-+Owyggi9IxT1ePKGafcI87ubSmxol6smwJ+RAHDQlx9+9cPwFWDiKFFCPuWhr9ignlGpZ9vDQLw67N4dcTVFEA==}
@@ -6162,6 +6182,8 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
+  '@types/emscripten@1.41.6': {}
+
   '@types/esrecurse@4.3.1': {}
 
   '@types/estree-jsx@1.0.5':
@@ -7688,6 +7710,14 @@ snapshots:
   property-information@7.2.0: {}
 
   punycode@2.3.1: {}
+
+  pyodide@314.0.8:
+    dependencies:
+      '@types/emscripten': 1.41.6
+      ws: 8.21.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   qified@0.10.1:
     dependencies:
